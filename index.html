@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vocabulary Quiz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <h1>Đăng nhập</h1>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="login-btn">Đăng nhập</button>
+    <div id="login-feedback"></div>
+  </div>
+  
+  <!-- Quiz Screen -->
+  <div id="quiz-screen" style="display: none;">
+    <div id="progress">Đã đúng: 0/5</div>
+    <div id="question">
+      <p id="vietnamese"></p>
+    </div>
+    <div id="answer-area">
+      <input type="text" id="wordInput" placeholder="Nhập từ" autofocus>
+      <input type="text" id="typeInput" placeholder="Nhập loại từ" maxlength="5">
+      <button id="check-btn">Xác nhận</button>
+    </div>
+    <div>
+      <button id="hint-btn">Gợi ý</button>
+      <span id="hint">Gợi ý: </span>
+    </div>
+    <div id="feedback"></div>
+    <div>
+      <button id="skip-btn">Bỏ qua</button>
+    </div>
+  </div>
+  
+  <!-- Audio elements for sound effects -->
+  <audio id="correct-sound" src="win.wav"></audio>
+  <audio id="wrong-sound" src="fail.wav"></audio>
+  
+  <script src="script.js"></script>
+</body>
+</html>
