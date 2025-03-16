@@ -135,8 +135,8 @@ const vocabListThanh = [
   {"word": "footwear", "type": "n", "vietnamese": "giày dép"},
   {"word": "high-heeled", "type": "adj", "vietnamese": "có gót cao"},
   {"word": "expensive", "type": "adj", "vietnamese": "đắt tiền"},
-  {"word": "worn", "type": "adj", "vietnamese": "mòn, sờn"},
-  {"word": "beginner", "type": "n", "vietnamese": "người mới bắt đầu"}
+  {"word": "worn", "type": "adj", "vietnamese": "mòn, sờn"}
+  //{"word": "beginner", "type": "n", "vietnamese": "người mới bắt đầu"}
 ];
 
 // Hardcoded login credentials
