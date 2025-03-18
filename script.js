@@ -70,7 +70,32 @@ const vocabListKhanh = [
   {"word": "alternative", "type": "n", "vietnamese": "sự thay thế / thay thế"},
   {"word": "pragmatic", "type": "adj", "vietnamese": "thực tế, thực dụng"},
   {"word": "philosopher", "type": "n", "vietnamese": "nhà triết học"},
-  {"word": "unveil", "type": "v", "vietnamese": "tiết lộ, công bố (một điều mới mẻ)"}
+  {"word": "unveil", "type": "v", "vietnamese": "tiết lộ, công bố (một điều mới mẻ)"},
+  {"word": "insufficiently", "type": "adv", "vietnamese": "không đủ"},
+  {"word": "prominence", "type": "n", "vietnamese": "sự nổi bật"},
+  {"word": "one-time", "type": "adj", "vietnamese": "từng (một lần)"},
+  {"word": "panacea", "type": "n", "vietnamese": "giải pháp toàn diện"},
+  {"word": "consensus", "type": "n", "vietnamese": "sự đồng thuận"},
+  {"word": "phenomenon", "type": "n", "vietnamese": "hiện tượng"},
+  {"word": "rhetorically", "type": "adv", "vietnamese": "mang tính tu từ"},
+  {"word": "encoding", "type": "n", "vietnamese": "việc mã hóa"},
+  {"word": "compelling", "type": "adj", "vietnamese": "hấp dẫn, thuyết phục"},
+  {"word": "robust", "type": "adj", "vietnamese": "mạnh mẽ, chắc chắn"},
+  {"word": "misperception", "type": "n", "vietnamese": "hiểu sai, nhận thức sai"},
+  {"word": "strategic", "type": "adj", "vietnamese": "mang tính chiến lược"},
+  {"word": "deceive", "type": "v", "vietnamese": "lừa dối"},
+  {"word": "persistence", "type": "n", "vietnamese": "tính kiên trì"},
+  {"word": "inevitable", "type": "adj", "vietnamese": "không thể tránh khỏi"},
+  {"word": "flourish", "type": "v", "vietnamese": "phát triển mạnh"},
+  {"word": "agency", "type": "n", "vietnamese": "cơ quan, tổ chức"},
+  {"word": "skepticism", "type": "n", "vietnamese": "sự hoài nghi"},
+  {"word": "cognitive", "type": "adj", "vietnamese": "liên quan đến nhận thức"},
+  {"word": "curtail", "type": "v", "vietnamese": "cắt giảm, hạn chế"},
+  {"word": "possess", "type": "v", "vietnamese": "sở hữu"},
+  {"word": "rugged", "type": "adj", "vietnamese": "bền bỉ, chắc chắn"},
+  {"word": "predominantly", "type": "adv", "vietnamese": "chủ yếu"},
+  {"word": "prowl", "type": "v", "vietnamese": "đi rình mò"},
+  {"word": "majority", "type": "n", "vietnamese": "phần lớn"}
 ];
 
 const vocabListThanh = [
