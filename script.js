@@ -18,7 +18,21 @@ const vocabListKhanh = [
     {"word": "hydraulic",       "type": "adj", "vietnamese": "thuỷ lực"},
     {"word": "ventilated",      "type": "adj", "vietnamese": "thông thoáng"},
     {"word": "elegant",         "type": "adj", "vietnamese": "thanh lịch"},
-    {"word": "palace",          "type": "n",   "vietnamese": "cung điện"}
+    {"word": "palace",          "type": "n",   "vietnamese": "cung điện"},
+    {"word": "staggering",     "type": "adj", "vietnamese": "đáng kinh ngạc"},
+    {"word": "wander",         "type": "v",   "vietnamese": "lang thang"},
+    {"word": "predominantly",  "type": "adv", "vietnamese": "chủ yếu"},
+    {"word": "resplendently",  "type": "adv", "vietnamese": "lộng lẫy"},
+    {"word": "intensely",      "type": "adv", "vietnamese": "mãnh liệt"},
+    {"word": "aromatic",       "type": "adj", "vietnamese": "thơm"},
+    {"word": "sprout",         "type": "v",   "vietnamese": "mọc (mầm)"},
+    {"word": "aubergine",      "type": "n",   "vietnamese": "cà tím"},
+    {"word": "sustainable",    "type": "adj", "vietnamese": "bền vững"},
+    {"word": "consultancy",    "type": "n",   "vietnamese": "dịch vụ tư vấn"},
+    {"word": "flourish",       "type": "v",   "vietnamese": "phát triển mạnh"},
+    {"word": "enquiry",        "type": "n",   "vietnamese": "yêu cầu thông tin"},
+    {"word": "substantial",    "type": "adj", "vietnamese": "đáng kể"},
+    {"word": "pesticide",      "type": "n",   "vietnamese": "thuốc trừ sâu"}
 ];
 
 const vocabListThanh = [
