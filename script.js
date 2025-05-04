@@ -32,7 +32,17 @@ const vocabListKhanh = [
     {"word": "flourish",       "type": "v",   "vietnamese": "phát triển mạnh"},
     {"word": "enquiry",        "type": "n",   "vietnamese": "yêu cầu thông tin"},
     {"word": "substantial",    "type": "adj", "vietnamese": "đáng kể"},
-    {"word": "pesticide",      "type": "n",   "vietnamese": "thuốc trừ sâu"}
+    {"word": "pesticide",      "type": "n",   "vietnamese": "thuốc trừ sâu"},
+    {"word": "triumph",      "type": "n",   "vietnamese": "chiến thắng lớn; thành tựu vẻ vang"},
+    {"word": "dense",        "type": "adj", "vietnamese": "dày đặc; khó hiểu"},
+    {"word": "unshakable",   "type": "adj", "vietnamese": "vững chắc không thể lay chuyển"},
+    {"word": "virtue",       "type": "n",   "vietnamese": "đức hạnh; phẩm chất đạo đức"},
+    {"word": "destructive",  "type": "adj", "vietnamese": "gây hủy hoại"},
+    {"word": "consoling",    "type": "adj", "vietnamese": "mang tính an ủi"},
+    {"word": "resilience",   "type": "n",   "vietnamese": "khả năng phục hồi"},
+    {"word": "profound",     "type": "adj", "vietnamese": "sâu sắc; thâm thúy"},
+    {"word": "undertaking",  "type": "n",   "vietnamese": "công việc khó khăn"},
+    {"word": "principle",   "type": "n", "vietnamese": "nguyên tắc"}
 ];
 
 const vocabListThanh = [
