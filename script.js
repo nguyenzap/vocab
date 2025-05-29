@@ -79,8 +79,8 @@ const vocabListKhiem = [
 
 // Hardcoded login credentials
 const credentials = {
-  khanh: "026895",
-  thanh: "026318"
+  khanh: "1234",
+  khiem: "1234"
 };
 
 let currentVocabList = [];
