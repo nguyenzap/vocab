@@ -45,26 +45,36 @@ const vocabListKhanh = [
     {"word": "principle",   "type": "n", "vietnamese": "nguyên tắc"}
 ];
 
-const vocabListThanh = [
-  {"word": "sophisticated",   "type": "adj", "vietnamese": "tinh vi; phức tạp"},
-    {"word": "inhabit",         "type": "v",   "vietnamese": "cư trú"},
-    {"word": "catastrophe",     "type": "n",   "vietnamese": "thảm hoạ"},
-    {"word": "unsustainable",   "type": "adj", "vietnamese": "không bền vững"},
-    {"word": "integrated",      "type": "adj", "vietnamese": "được tích hợp"},
-    {"word": "infrastructure",  "type": "n",   "vietnamese": "cơ sở hạ tầng"},
-    {"word": "canal",           "type": "n",   "vietnamese": "kênh đào"},
-    {"word": "adjacent",        "type": "adj", "vietnamese": "liền kề"},
-    {"word": "global",          "type": "adj", "vietnamese": "toàn cầu"},
-    {"word": "crisis",          "type": "n",   "vietnamese": "khủng hoảng"},
-    {"word": "cusp",            "type": "n",   "vietnamese": "bước ngoặt"},
-    {"word": "revolutionise",   "type": "v",   "vietnamese": "cách mạng hoá"},
-    {"word": "prominent",       "type": "adj", "vietnamese": "nổi bật"},
-    {"word": "innovation",      "type": "n",   "vietnamese": "đổi mới"},
-    {"word": "unconventional",  "type": "adj", "vietnamese": "phi truyền thống"},
-    {"word": "hydraulic",       "type": "adj", "vietnamese": "thuỷ lực"},
-    {"word": "ventilated",      "type": "adj", "vietnamese": "thông thoáng"},
-    {"word": "elegant",         "type": "adj", "vietnamese": "thanh lịch"},
-    {"word": "palace",          "type": "n",   "vietnamese": "cung điện"}
+const vocabListKhiem = [
+    {"word": "drought", "type": "n", "vietnamese": "hạn hán"},
+    {"word": "crop", "type": "n", "vietnamese": "cây trồng"},
+    {"word": "herbicide", "type": "n", "vietnamese": "thuốc diệt cỏ"},
+    {"word": "agricultural", "type": "adj", "vietnamese": "thuộc về nông nghiệp"},
+    {"word": "tractor", "type": "n", "vietnamese": "máy kéo (nông nghiệp)"},
+    {"word": "plough", "type": "n", "vietnamese": "cái cày"},
+    {"word": "estimate", "type": "n", "vietnamese": "sự ước tính"},
+    {"word": "method", "type": "n", "vietnamese": "phương pháp"},
+    {"word": "implement", "type": "v", "vietnamese": "thực hiện, triển khai"},
+    {"word": "sacrifice", "type": "v", "vietnamese": "hi sinh"},
+    {"word": "horizontal", "type": "adj", "vietnamese": "theo chiều ngang"},
+    {"word": "evolve", "type": "v", "vietnamese": "tiến hóa"},
+    {"word": "artificial", "type": "adj", "vietnamese": "nhân tạo"},
+    {"word": "light", "type": "n", "vietnamese": "ánh sáng"},
+    {"word": "natural", "type": "adj", "vietnamese": "tự nhiên"},
+    {"word": "overhead", "type": "adj", "vietnamese": "ở phía trên"},
+    {"word": "aspiration", "type": "n", "vietnamese": "khát vọng"},
+    {"word": "stack", "type": "v", "vietnamese": "xếp chồng"},
+    {"word": "tray", "type": "n", "vietnamese": "khay"},
+    {"word": "vertical", "type": "adj", "vietnamese": "theo chiều dọc"},
+    {"word": "farming", "type": "n", "vietnamese": "sự canh tác"},
+    {"word": "potential", "type": "adj", "vietnamese": "tiềm năng"},
+    {"word": "advantage", "type": "n", "vietnamese": "lợi thế"},
+    {"word": "probable", "type": "adj", "vietnamese": "có khả năng xảy ra"},
+    {"word": "development", "type": "n", "vietnamese": "sự phát triển"},
+    {"word": "infectious", "type": "adj", "vietnamese": "truyền nhiễm"},
+    {"word": "disease", "type": "n", "vietnamese": "bệnh"},
+    {"word": "urban", "type": "adj", "vietnamese": "thuộc đô thị"},
+    {"word": "centre", "type": "n", "vietnamese": "trung tâm"}
 ];
 
 // Hardcoded login credentials
@@ -124,7 +134,7 @@ function loginFunction() {
   loginFeedback.style.color = "green";
   // Set the vocabulary list based on the username
   currentVocabList = (username === "khanh") ? vocabListKhanh :
-                     (username === "thanh") ? vocabListThanh : [];
+                     (username === "khiem") ? vocabListKhiem : [];
   startExam();
 }
 
