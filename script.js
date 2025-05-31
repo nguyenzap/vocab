@@ -215,12 +215,13 @@ function showWordHint() {
   if (hintIndex < correctWord.length) {
     hintIndex++;
   }
-  letterHintEl.textContent = `Gợi ý: ${correctWord.substring(0, hintIndex)}`;
+  // No more “Gợi ý: ” prefix—just show the revealed letters.
+  letterHintEl.textContent = correctWord.substring(0, hintIndex);
 }
 
 function showTypeHint() {
-  // Hiển thị loại từ một lần (n, v, adj, adv...)
-  typeHintEl.textContent = `Loại từ: ${currentWord.type}`;
+  // No more “Loại từ: ” prefix—just show the type itself (e.g. “n”, “v”, “adj”).
+  typeHintEl.textContent = currentWord.type;
 }
 
 function skipQuestion() {
