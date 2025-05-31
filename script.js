@@ -75,9 +75,8 @@ const credentials = {
 
 let currentVocabList = [];
 let unseenWords = [];
-let wrongStack = [];
+let wrongQueue = [];
 let currentWord = null;
-let lastWord = null;
 let score = 0;
 let hintIndex = 0;
 let currentAttempt = 0;
@@ -128,7 +127,7 @@ function loginFunction() {
   loginFeedback.textContent = "Đăng nhập thành công!";
   loginFeedback.style.color = "green";
   // Set the vocabulary list based on the username
-  currentVocabList = (username === "khanh") ? vocabListKhanh :
+  currentVocabList = (username === "khanh") ? vocabListKhanh : []
                      (username === "khiem") ? vocabListKhiem : [];
   startExam();
 }
@@ -172,41 +171,37 @@ function startExam() {
 }
 
 function nextQuestion() {
-  // Nếu hết cả unseenWords và wrongStack, kết thúc
-  if (unseenWords.length === 0 && wrongStack.length === 0) {
-    endQuiz();
-    return;
+  // If no more cards, finish
+  if (wrongQueue.length === 0) {
+    return endQuiz();
   }
-  
-  // Chọn từ tiếp theo (tránh lặp lại ngay lập tức)
-  let candidates = unseenWords.length > 0 ? unseenWords : wrongStack;
-  if (candidates.length > 1 && lastWord) {
-    candidates = candidates.filter(w => w !== lastWord);
+
+  // 1) If there are still unseen words, pick one at random
+  if (unseenWords.length > 0) {
+    const idx       = Math.floor(Math.random() * unseenWords.length);
+    currentWord     = unseenWords.splice(idx, 1)[0];
   }
-  
-  currentWord = candidates[Math.floor(Math.random() * candidates.length)];
-  
-  // Nếu từ được chọn nằm trong unseenWords, xóa khỏi unseenWords
-  const idxUnseen = unseenWords.indexOf(currentWord);
-  if (idxUnseen !== -1) {
-    unseenWords.splice(idxUnseen, 1);
+  // 2) Otherwise, dequeue from the front of wrongQueue
+  else {
+    currentWord = wrongQueue.shift();
   }
-  
+
+  // Reset hints + attempts
   currentAttempt = 0;
-  hintIndex = 0;
-  
-  // Hiển thị nghĩa, reset các ô input và gợi ý
+  hintIndex      = 0;
+
+  // Show the Vietnamese meaning
   vietnameseEl.textContent = `Nghĩa: ${currentWord.vietnamese}`;
-  wordInput.value = "";
-  typeInput.value = "";
-  feedbackEl.textContent = "";
+
+  // Clear input fields, feedback, and hints
+  wordInput.value         = "";
+  typeInput.value         = "";
+  feedbackEl.textContent  = "";
   letterHintEl.textContent = "";
-  typeHintEl.textContent = "";
-  
-  // Xóa viền đỏ (nếu có) từ lần trước
+  typeHintEl.textContent   = "";
   wordInput.classList.remove("error");
   typeInput.classList.remove("error");
-  
+
   wordInput.focus();
 }
 
@@ -224,52 +219,49 @@ function showTypeHint() {
 }
 
 function skipQuestion() {
-  if (!wrongStack.includes(currentWord)) {
-    wrongStack.push(currentWord);
-  }
-  lastWord = currentWord;
+  wrongQueue.push(currentWord);
   nextQuestion();
 }
 
 function checkAnswer() {
-  const userWord = wordInput.value.trim().toLowerCase();
-  const userType = typeInput.value.trim().toLowerCase();
+  const userWord    = wordInput.value.trim().toLowerCase();
+  const userType    = typeInput.value.trim().toLowerCase();
   const correctWord = currentWord.word.trim().toLowerCase();
   const correctType = currentWord.type.trim().toLowerCase();
-  
-  // Reset viền đỏ mặc định
+
+  // Remove any old red‐border styling
   wordInput.classList.remove("error");
   typeInput.classList.remove("error");
-  
-  // Kiểm tra từng phần riêng biệt
+
   const wordIsRight = (userWord === correctWord);
   const typeIsRight = (userType === correctType);
-  
+
   if (wordIsRight && typeIsRight) {
-    // Cả hai đúng
-    if (currentAttempt > 0 || hintIndex > 0) {
-      feedbackEl.textContent = "Đúng nhưng không tính điểm vì đã sai/gợi ý. Từ này sẽ xuất hiện lại.";
-      feedbackEl.style.color = "orange";
-      if (!wrongStack.includes(currentWord)) {
-        wrongStack.push(currentWord);
-      }
-      correctSound.play();
-    } else {
+    // (A) Perfect first try → full point
+    if (currentAttempt === 0 && hintIndex === 0) {
       feedbackEl.textContent = "Đúng!";
       feedbackEl.style.color = "green";
       score++;
       progressEl.textContent = `Đã đúng: ${score}/${currentVocabList.length}`;
       correctSound.play();
-      // Nếu từ có trong wrongStack, xoá nó
-      const idxWrong = wrongStack.indexOf(currentWord);
-      if (idxWrong !== -1) {
-        wrongStack.splice(idxWrong, 1);
-      }
+
+      // If by any chance it’s still in wrongQueue, remove it
+      // const idxInQueue = wrongQueue.indexOf(currentWord);
+      // if (idxInQueue !== -1) {
+      //   wrongQueue.splice(idxInQueue, 1);
+      // }
     }
-    lastWord = currentWord;
+    // (B) Right after a hint or wrong attempt → no point, re‐enqueue
+    else {
+      feedbackEl.textContent = "Đúng nhưng không tính điểm vì đã sai/gợi ý. Từ này sẽ xuất hiện lại.";
+      feedbackEl.style.color = "orange";
+      correctSound.play();
+      wrongQueue.push(currentWord);
+    }
     nextQuestion();
-  } else {
-    // Nếu sai, đánh dấu border cho ô tương ứng
+  } 
+  else {
+    // (C) At least one field is wrong right now
     if (!wordIsRight) {
       wordInput.classList.add("error");
     }
