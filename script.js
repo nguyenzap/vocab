@@ -200,8 +200,8 @@ function nextQuestion() {
   wordInput.value = "";
   typeInput.value = "";
   feedbackEl.textContent = "";
-  // letterHintEl.textContent = "";
-  // typeHintEl.textContent = "";
+  letterHintEl.textContent = "";
+  typeHintEl.textContent = "";
   
   // Xóa viền đỏ (nếu có) từ lần trước
   wordInput.classList.remove("error");
@@ -278,8 +278,6 @@ function checkAnswer() {
       typeInput.classList.add("error");
     }
     currentAttempt++;
-    // feedbackEl.textContent = "Sai! Mời thử lại.";
-    // feedbackEl.style.color = "red";
     wrongSound.play();
   }
 }
