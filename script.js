@@ -278,8 +278,8 @@ function checkAnswer() {
       typeInput.classList.add("error");
     }
     currentAttempt++;
-    feedbackEl.textContent = "Sai! Mời thử lại.";
-    feedbackEl.style.color = "red";
+    // feedbackEl.textContent = "Sai! Mời thử lại.";
+    // feedbackEl.style.color = "red";
     wrongSound.play();
   }
 }
