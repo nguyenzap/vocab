@@ -172,7 +172,7 @@ function startExam() {
 
 function nextQuestion() {
   // If no more cards, finish
-  if (wrongQueue.length === 0) {
+  if (unseenWords.length === 0 && wrongQueue.length === 0) {
     return endQuiz();
   }
 
