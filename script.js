@@ -66,7 +66,7 @@ const vocabListKhiem = [
     {"word": "disease", "type": "n", "vietnamese": "bệnh"},
     {"word": "urban", "type": "adj", "vietnamese": "thuộc đô thị"},
     {"word": "centre", "type": "n", "vietnamese": "trung tâm"}
-
+];
 // Hardcoded login credentials
 const credentials = {
   khanh: "1234",
