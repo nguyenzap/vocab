@@ -215,12 +215,11 @@ function showWordHint() {
   if (hintIndex < correctWord.length) {
     hintIndex++;
   }
-  // No more “Gợi ý: ” prefix—just show the revealed letters.
   letterHintEl.textContent = correctWord.substring(0, hintIndex);
 }
 
 function showTypeHint() {
-  // No more “Loại từ: ” prefix—just show the type itself (e.g. “n”, “v”, “adj”).
+  // Hiển thị loại từ một lần (n, v, adj, adv...)
   typeHintEl.textContent = currentWord.type;
 }
 
