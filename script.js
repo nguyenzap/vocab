@@ -200,8 +200,8 @@ function nextQuestion() {
   wordInput.value = "";
   typeInput.value = "";
   feedbackEl.textContent = "";
-  letterHintEl.textContent = "Gợi ý: ";
-  typeHintEl.textContent = "Loại từ: ";
+  // letterHintEl.textContent = "";
+  // typeHintEl.textContent = "";
   
   // Xóa viền đỏ (nếu có) từ lần trước
   wordInput.classList.remove("error");
