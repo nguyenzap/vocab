@@ -16,3 +16,8 @@ input, button {
   max-width: 500px;
   margin: auto;
 }
+
+/* Nếu input mắc lỗi, thêm viền đỏ */
+input.error {
+  border: 2px solid red;
+}
