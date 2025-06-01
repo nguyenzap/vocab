@@ -33,7 +33,27 @@ const vocabListKhanh = [
     {"word": "depict",        "type": "v",    "vietnamese": "miêu tả"},
     {"word": "foreshadow",    "type": "v",    "vietnamese": "báo trước"},
     {"word": "salient",       "type": "adj",  "vietnamese": "nổi bật"},
-    {"word": "comprise",      "type": "v",    "vietnamese": "bao gồm"}
+    {"word": "comprise",      "type": "v",    "vietnamese": "bao gồm"},
+   {"word": "persistence", "type": "noun", "vietnamese": "sự dai dẳng"},
+    {"word": "peril", "type": "noun", "vietnamese": "nguy hiểm"},
+    {"word": "interpersonal", "type": "adj", "vietnamese": "giữa các cá nhân"},
+    {"word": "inadvertently", "type": "adv", "vietnamese": "vô ý, không cố ý"},
+    {"word": "distribute", "type": "verb", "vietnamese": "phân phối"},
+    {"word": "widespread", "type": "adj", "vietnamese": "lan rộng, phổ biến"},
+    {"word": "facilitate", "type": "verb", "vietnamese": "tạo điều kiện, làm cho thuận lợi"},
+    {"word": "unduly", "type": "adv", "vietnamese": "quá đáng, không hợp lý"},
+    {"word": "misperception", "type": "noun", "vietnamese": "nhận thức sai, hiểu sai"},
+    {"word": "contemporary", "type": "adj", "vietnamese": "đương thời, hiện đại"},
+    {"word": "warrant", "type": "verb", "vietnamese": "đòi hỏi, cần thiết"},
+    {"word": "encounter", "type": "verb", "vietnamese": "gặp phải"},
+    {"word": "counter", "type": "verb", "vietnamese": "phản bác, chống lại"},
+    {"word": "tremendous", "type": "adj", "vietnamese": "to lớn, ghê gớm"},
+    {"word": "subsequent", "type": "adj", "vietnamese": "tiếp theo, xảy ra sau"},
+    {"word": "empirically", "type": "adv", "vietnamese": "theo cơ sở thực nghiệm"},
+    {"word": "encode", "type": "verb", "vietnamese": "ghi nhận, mã hóa"},
+    {"word": "momentarily", "type": "adv", "vietnamese": "trong chốc lát"},
+    {"word": "reside", "type": "verb", "vietnamese": "nằm ở, cư trú"},
+    {"word": "arduous", "type": "adj", "vietnamese": "gian khổ, khó khăn"}
 ];
 
 const vocabListKhiem = [
