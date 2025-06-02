@@ -147,7 +147,7 @@ function loginFunction() {
   loginFeedback.textContent = "Đăng nhập thành công!";
   loginFeedback.style.color = "green";
   // Set the vocabulary list based on the username
-  currentVocabList = (username === "khanh") ? vocabListKhanh : []
+  currentVocabList = (username === "khanh") ? vocabListKhanh : [],
                      (username === "khiem") ? vocabListKhiem : [];
   startExam();
 }
