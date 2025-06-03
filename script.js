@@ -114,7 +114,17 @@ const vocabListKhiem = [
     {"word": "mismatch", "type": "n", "vietnamese": "sự không phù hợp"},
     {"word": "specific", "type": "adj", "vietnamese": "cụ thể"},
     {"word": "purpose", "type": "n", "vietnamese": "mục đích"},
-    {"word": "centre", "type": "n", "vietnamese": "trung tâm"}
+    {"word": "centre", "type": "n", "vietnamese": "trung tâm"},
+   {"word": "vacancy", "type": "n", "vietnamese": "vị trí bỏ trống"},
+    {"word": "tutor", "type": "n", "vietnamese": "gia sư; người hướng dẫn"},
+    {"word": "hostel", "type": "n", "vietnamese": "ký túc xá; nhà trọ"},
+    {"word": "perk", "type": "n", "vietnamese": "đặc quyền; lợi ích phụ"},
+    {"word": "referee", "type": "n", "vietnamese": "người giới thiệu"},
+    {"word": "huge", "type": "adj", "vietnamese": "to lớn"},
+    {"word": "cardiac", "type": "adj", "vietnamese": "(thuộc về) tim mạch"},
+    {"word": "stock", "type": "n", "vietnamese": "cổ phiếu"},
+    {"word": "oversea", "type": "adj", "vietnamese": "hải ngoại; ở nước ngoài"},
+    {"word": "seminar", "type": "n", "vietnamese": "hội thảo"}
 ];
 // Hardcoded login credentials
 const credentials = {
