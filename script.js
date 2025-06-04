@@ -124,7 +124,28 @@ const vocabListKhiem = [
     {"word": "cardiac", "type": "adj", "vietnamese": "(thuộc về) tim mạch"},
     {"word": "stock", "type": "n", "vietnamese": "cổ phiếu"},
     {"word": "oversea", "type": "adj", "vietnamese": "hải ngoại; ở nước ngoài"},
-    {"word": "seminar", "type": "n", "vietnamese": "hội thảo"}
+    {"word": "seminar", "type": "n", "vietnamese": "hội thảo"},
+   {"word": "conquer", "type": "v", "vietnamese": "chinh phục"},
+    {"word": "shipbuilder", "type": "n", "vietnamese": "thợ đóng tàu"},
+    {"word": "lightweight", "type": "adj", "vietnamese": "nhẹ"},
+    {"word": "enroll", "type": "v", "vietnamese": "gia nhập"},
+    {"word": "military", "type": "n", "vietnamese": "quân đội"},
+    {"word": "hull", "type": "n", "vietnamese": "thân tàu"},
+    {"word": "sail", "type": "n", "vietnamese": "cánh buồm"},
+    {"word": "rower", "type": "n", "vietnamese": "người chèo"},
+    {"word": "quay", "type": "n", "vietnamese": "bến tàu"},
+    {"word": "drag", "type": "v", "vietnamese": "kéo"},
+    {"word": "craftsman", "type": "n", "vietnamese": "thợ thủ công"},
+    {"word": "plank", "type": "n", "vietnamese": "tấm ván"},
+    {"word": "dominate", "type": "v", "vietnamese": "thống trị"},
+    {"word": "ensure", "type": "v", "vietnamese": "đảm bảo"},
+    {"word": "merchant", "type": "adj", "vietnamese": "thương mại"},
+    {"word": "ship", "type": "n", "vietnamese": "tàu"},
+    {"word": "reveal", "type": "v", "vietnamese": "tiết lộ"},
+    {"word": "ancient", "type": "adj", "vietnamese": "cổ đại"},
+    {"word": "artefact", "type": "n", "vietnamese": "hiện vật"},
+    {"word": "glacier", "type": "n", "vietnamese": "sông băng"},
+    {"word": "shrink", "type": "v", "vietnamese": "co lại"}
 ];
 // Hardcoded login credentials
 const credentials = {
