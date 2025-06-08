@@ -85,7 +85,15 @@ const vocabListKhiem = [
     {"word": "acrobat", "type": "n", "vietnamese": "diễn viên xiếc nhào lộn"},
     {"word": "carpenter", "type": "n", "vietnamese": "thợ mộc"},
     {"word": "roundabout", "type": "n", "vietnamese": "bùng binh, vòng xuyến"},
-    {"word": "junction", "type": "n", "vietnamese": "ngã ba/ngã tư, điểm giao nhau"}
+    {"word": "junction", "type": "n", "vietnamese": "ngã ba/ngã tư, điểm giao nhau"},
+       {"word": "lay", "type": "v", "vietnamese": "tàn phá, phá hủy"},
+    {"word": "entire", "type": "adj", "vietnamese": "toàn bộ"},
+    {"word": "vogue", "type": "n", "vietnamese": "mốt, sự thịnh hành"},
+    {"word": "urgent", "type": "adj", "vietnamese": "khẩn cấp"},
+    {"word": "multi-storey", "type": "adj", "vietnamese": "nhiều tầng"},
+    {"word": "construct", "type": "v", "vietnamese": "xây dựng"},
+    {"word": "proponent", "type": "n", "vietnamese": "người ủng hộ"},
+    {"word": "eventual", "type": "adj", "vietnamese": "cuối cùng"}
 ];
 // Hardcoded login credentials
 const credentials = {
