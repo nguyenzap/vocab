@@ -53,7 +53,24 @@ const vocabListKhanh = [
     {"word": "encode", "type": "verb", "vietnamese": "ghi nhận, mã hóa"},
     {"word": "momentarily", "type": "adv", "vietnamese": "trong chốc lát"},
     {"word": "reside", "type": "verb", "vietnamese": "nằm ở, cư trú"},
-    {"word": "arduous", "type": "adj", "vietnamese": "gian khổ, khó khăn"}
+    {"word": "arduous", "type": "adj", "vietnamese": "gian khổ, khó khăn"},
+   {"word": "predecessor", "type": "n", "vietnamese": " người tiền nhiệm, người hoặc vật xuất hiện trước"},
+    {"word": "constraint", "type": "n", "vietnamese": "sự hạn chế, giới hạn"},
+    {"word": "serendipity", "type": "n", "vietnamese": "sự tình cờ mang lại may mắn"},
+    {"word": "domain", "type": "n", "vietnamese": "lĩnh vực, phạm vi"},
+    {"word": "fundamentally", "type": "adv", "vietnamese": "về cơ bản, về nền tảng"},
+    {"word": "notion", "type": "n", "vietnamese": "khái niệm, quan niệm"},
+    {"word": "candidate", "type": "n", "vietnamese": "ứng viên, người/điểm đủ điều kiện"},
+    {"word": "provenance", "type": "n", "vietnamese": "nguồn gốc, xuất xứ"},
+    {"word": "intellectual", "type": "adj", "vietnamese": "thuộc trí tuệ"},
+    {"word": "disregard", "type": "v", "vietnamese": "bỏ qua, không để ý đến"},
+    {"word": "prior", "type": "adj", "vietnamese": "trước, trước đó"},
+    {"word": "spontaneously", "type": "adv", "vietnamese": "một cách tự phát, tự nhiên"},
+    {"word": "endeavor", "type": "n", "vietnamese": "nỗ lực, cố gắng"},
+    {"word": "undermine", "type": "v", "vietnamese": "làm suy yếu, làm giảm giá trị"},
+    {"word": "cumulative", "type": "adj", "vietnamese": "tích lũy, dồn lại"},
+    {"word": "thrive", "type": "v", "vietnamese": "phát triển mạnh, thịnh vượng"},
+    {"word": "monumental", "type": "adj", "vietnamese": "đồ sộ, vĩ đại"}
 ];
 
 const vocabListKhiem = [
