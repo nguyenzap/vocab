@@ -70,7 +70,20 @@ const vocabListKhanh = [
     {"word": "undermine", "type": "v", "vietnamese": "làm suy yếu, làm giảm giá trị"},
     {"word": "cumulative", "type": "adj", "vietnamese": "tích lũy, dồn lại"},
     {"word": "thrive", "type": "v", "vietnamese": "phát triển mạnh, thịnh vượng"},
-    {"word": "monumental", "type": "adj", "vietnamese": "đồ sộ, vĩ đại"}
+    {"word": "monumental", "type": "adj", "vietnamese": "đồ sộ, vĩ đại"},
+   {"word": "acclaim", "type": "n", "vietnamese": "sự ca ngợi"},
+    {"word": "altruism", "type": "n", "vietnamese": "lòng vị tha"},
+    {"word": "bound", "type": "adj", "vietnamese": "chắc chắn"},
+    {"word": "bleak", "type": "adj", "vietnamese": "ảm đạm"},
+    {"word": "custody", "type": "n", "vietnamese": "quyền giám hộ"},
+    {"word": "domineering", "type": "adj", "vietnamese": "hống hách"},
+    {"word": "egalitarianism", "type": "n", "vietnamese": "chủ nghĩa bình đẳng"},
+    {"word": "hierarchical", "type": "adj", "vietnamese": "theo thứ bậc"},
+    {"word": "feasible", "type": "adj", "vietnamese": "khả thi"},
+    {"word": "sparsely", "type": "adv", "vietnamese": "một cách thưa thớt"},
+    {"word": "transcend", "type": "v", "vietnamese": "vượt qua"},
+    {"word": "ostracise", "type": "v", "vietnamese": "tẩy chay"},
+    {"word": "ulterior", "type": "adj", "vietnamese": "ẩn giấu"}
 ];
 
 const vocabListKhiem = [
