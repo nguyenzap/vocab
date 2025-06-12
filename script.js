@@ -147,7 +147,25 @@ const vocabListKhiem = [
     {"word": "neutral", "type": "adj", "vietnamese": "trung lập"},
     {"word": "motionless", "type": "adj", "vietnamese": "bất động"},
     {"word": "encounter", "type": "v", "vietnamese": "gặp phải"},
-    {"word": "condition", "type": "n", "vietnamese": "tình huống, điều kiện"}
+    {"word": "condition", "type": "n", "vietnamese": "tình huống, điều kiện"},
+    {"words": ["rent", "hire"], "type": "n", "vietnamese": "thuê"},
+       {"word": "hostile", "type": "adj", "vietnamese": "thù địch, hiếu chiến"},
+    {"word": "overwhelm", "type": "v", "vietnamese": "làm choáng ngợp, áp đảo"},
+    {"word": "terror", "type": "n", "vietnamese": "nỗi kinh hoàng, sự khiếp sợ"},
+    {"word": "associate", "type": "v", "vietnamese": "liên kết, gắn với"},
+    {"word": "obtain", "type": "v", "vietnamese": "đạt được, thu được"},
+    {"word": "undergo", "type": "v", "vietnamese": "trải qua"},
+    {"word": "cue", "type": "n", "vietnamese": "tín hiệu, dấu hiệu"},
+    {"word": "elicit", "type": "v", "vietnamese": "gợi ra, khơi gợi"},
+    {"word": "assume", "type": "v", "vietnamese": "cho rằng, giả định"},
+    {"word": "emit", "type": "v", "vietnamese": "phát ra, bốc ra"},
+    {"word": "deduce", "type": "v", "vietnamese": "suy ra, suy luận"},
+    {"word": "regain", "type": "v", "vietnamese": "lấy lại, giành lại"},
+    {"word": "closeness", "type": "n", "vietnamese": "sự gần gũi"},
+    {"word": "extend", "type": "v", "vietnamese": "kéo dài, mở rộng"},
+    {"word": "evoke", "type": "v", "vietnamese": "gợi lên"},
+    {"word": "gesture", "type": "n", "vietnamese": "cử chỉ"},
+    {"word": "cab", "type": "n", "vietnamese": "taxi"}
 ];
 // Hardcoded login credentials
 const credentials = {
