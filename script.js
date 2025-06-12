@@ -88,8 +88,8 @@ const vocabListKhanh = [
 
 const vocabListKhiem = [
 
-   {"words": ["rent", "hire"], "type": "n", "vietnamese": "thuê"},
-    {"words": ["rent", "hire"], "type": "n", "vietnamese": "thuê"}
+   {"wors": ["rent", "hire"], "type": "n", "vietnamese": "thuê"},
+    {"word": ["rent", "hire"], "type": "n", "vietnamese": "thuê"}
 ];
 // Hardcoded login credentials
 const credentials = {
