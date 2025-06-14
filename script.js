@@ -166,7 +166,27 @@ const vocabListKhiem = [
     {"word": "gesture", "type": "n", "vietnamese": "cử chỉ"},
     {"word": "cab", "type": "n", "vietnamese": "taxi"},
    {"word": "rent", "type": "n", "vietnamese": "thuê"},
-    {"word": "hire", "type": "n", "vietnamese": "thuê"}
+    {"word": "hire", "type": "n", "vietnamese": "thuê"},
+    {"word": "fear", "type": "n", "vietnamese": "sợ hãi"},
+    {"word": "analysis", "type": "n", "vietnamese": "sự phân tích"},
+    {"word": "treat", "type": "v", "vietnamese": "điều trị"},
+    {"word": "solitary", "type": "adj", "vietnamese": "cô độc"},
+    {"word": "peer", "type": "n", "vietnamese": "bạn cùng trang lứa"},
+    {"word": "directly", "type": "adv", "vietnamese": "một cách trực tiếp"},
+    {"word": "primate", "type": "n", "vietnamese": "động vật linh trưởng"},
+    {"word": "gentle", "type": "adj", "vietnamese": "nhẹ nhàng"},
+    {"word": "purse", "type": "v", "vietnamese": "mím (môi)"},
+    {"word": "yearn", "type": "v", "vietnamese": "khao khát"},
+    {"word": "spot", "type": "v", "vietnamese": "phát hiện"},
+    {"word": "bark", "type": "v", "vietnamese": "sủa"},
+    {"word": "force", "type": "v", "vietnamese": "ép buộc"},
+    {"word": "submissive", "type": "adj", "vietnamese": "phục tùng"},
+    {"word": "grimace", "type": "n", "vietnamese": "nét nhăn mặt"},
+    {"word": "surmise", "type": "v", "vietnamese": "phỏng đoán"},
+    {"word": "emerge", "type": "v", "vietnamese": "xuất hiện"},
+    {"word": "critical", "type": "adj", "vietnamese": "then chốt"},
+    {"word": "engage", "type": "v", "vietnamese": "tham gia"},
+    {"word": "abdomen", "type": "n", "vietnamese": "bụng"}
 ];
 // Hardcoded login credentials
 const credentials = {
