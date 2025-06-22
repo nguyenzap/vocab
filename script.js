@@ -107,7 +107,26 @@ const vocabListKhiem = [
     {"word": "deception", "type": "n", "vietnamese": "sự lừa dối"},
     {"word": "detect", "type": "v", "vietnamese": "phát hiện"},
     {"word": "faith", "type": "n", "vietnamese": "niềm tin"},
-    {"word": "axis", "type": "n", "vietnamese": "trục"}
+    {"word": "axis", "type": "n", "vietnamese": "trục"},
+   {"word": "brick", "type": "n", "vietnamese": "cục gạch"},
+    {"word": "break off", "type": "v", "vietnamese": "cắt đứt, ngừng"},
+    {"word": "dress up", "type": "v", "vietnamese": "mặc trang phục (đặc biệt), hoá trang"},
+    {"word": "intention", "type": "n", "vietnamese": "ý định"},
+    {"word": "worth", "type": "n", "vietnamese": "giá trị"},
+    {"word": "worthy", "type": "adj", "vietnamese": "xứng đáng"},
+    {"word": "ally", "type": "n", "vietnamese": "đồng minh"},
+    {"word": "discuss", "type": "v", "vietnamese": "thảo luận"},
+    {"word": "political", "type": "adj", "vietnamese": "thuộc chính trị"},
+    {"word": "politics", "type": "n", "vietnamese": "chính trị"},
+    {"word": "politician", "type": "n", "vietnamese": "chính trị gia"},
+    {"word": "display", "type": "v", "vietnamese": "trưng bày, hiển thị"},
+    {"word": "wealth", "type": "n", "vietnamese": "sự giàu có"},
+    {"word": "wealthy", "type": "adj", "vietnamese": "giàu có"},
+    {"word": "servant", "type": "n", "vietnamese": "người hầu"},
+    {"word": "audio", "type": "adj", "vietnamese": "(liên quan đến) âm thanh"},
+    {"word": "guide", "type": "n", "vietnamese": "hướng dẫn viên"},
+    {"word": "costume", "type": "n", "vietnamese": "trang phục"},
+    {"word": "adventure", "type": "n", "vietnamese": "cuộc phiêu lưu"}
 ];
 // Hardcoded login credentials
 const credentials = {
