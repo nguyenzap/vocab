@@ -145,7 +145,24 @@ const vocabListKhiem = [
     {"word": "insert", "type": "v", "vietnamese": "chèn vào"},
     {"word": "subheading", "type": "n", "vietnamese": "tiêu đề phụ"},
     {"word": "sake", "type": "n", "vietnamese": "mục đích, lợi ích"},
-    {"word": "format", "type": "n", "vietnamese": "định dạng"}
+    {"word": "format", "type": "n", "vietnamese": "định dạng"},
+   {"word": "description", "type": "n", "vietnamese": "sự mô tả"},  
+{"word": "timekeeping", "type": "n", "vietnamese": "việc đo lường/ghi lại thời gian"},  
+{"word": "invention", "type": "n", "vietnamese": "phát minh"},  
+{"word": "equal", "type": "adj", "vietnamese": "bằng nhau"},  
+{"word": "cabinet", "type": "n", "vietnamese": "tủ, hộp đựng"},  
+{"word": "measure", "type": "v", "vietnamese": "đo lường"},  
+{"word": "shadow", "type": "n", "vietnamese": "bóng, bóng râm"},  
+{"word": "advent", "type": "n", "vietnamese": "sự xuất hiện, sự ra đời"},  
+{"word": "satellite", "type": "n", "vietnamese": "vệ tinh"},  
+{"word": "function", "type": "n", "vietnamese": "chức năng"},  
+{"word": "existence", "type": "n", "vietnamese": "sự tồn tại"},  
+{"word": "shape", "type": "n", "vietnamese": "hình dạng"},  
+{"word": "permit", "type": "v", "vietnamese": "cho phép"},  
+{"word": "pendulum", "type": "n", "vietnamese": "con lắc"},  
+{"word": "split", "type": "v", "vietnamese": "chia, tách"},  
+{"word": "commence", "type": "v", "vietnamese": "bắt đầu"}  
+
 ];
 // Hardcoded login credentials
 const credentials = {
@@ -358,5 +375,6 @@ function endQuiz() {
   wordInput.disabled = true;
   typeInput.disabled = true;
 }
+
 
 
