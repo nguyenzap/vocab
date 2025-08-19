@@ -161,8 +161,72 @@ const vocabListKhiem = [
 {"word": "permit", "type": "v", "vietnamese": "cho phép"},  
 {"word": "pendulum", "type": "n", "vietnamese": "con lắc"},  
 {"word": "split", "type": "v", "vietnamese": "chia, tách"},  
-{"word": "commence", "type": "v", "vietnamese": "bắt đầu"}  
-
+{"word": "commence", "type": "v", "vietnamese": "bắt đầu"},
+    {"word": "communal", "type": "adj", "vietnamese": "chung, cộng đồng"},
+    {"word": "shipment", "type": "n", "vietnamese": "việc vận chuyển"},
+    {"word": "good", "type": "n", "vietnamese": "hàng hóa"},
+    {"word": "harvest", "type": "v", "vietnamese": "thu hoạch"},
+    {"word": "cycle", "type": "n", "vietnamese": "chu kỳ"},
+    {"word": "orbit", "type": "v", "vietnamese": "quay quanh"},
+    {"word": "adjust", "type": "v", "vietnamese": "điều chỉnh"},
+    {"word": "maintain", "type": "v", "vietnamese": "duy trì"},
+    {"word": "devise", "type": "v", "vietnamese": "phát minh, nghĩ ra"},
+    {"word": "swing", "type": "v", "vietnamese": "đung đưa, dao động"},
+    {"word": "anchor", "type": "n", "vietnamese": "mỏ neo"},
+    {"word": "escapement", "type": "n", "vietnamese": "bộ thoát (trong đồng hồ)"},
+    {"word": "lever", "type": "n", "vietnamese": "đòn bẩy, cần gạt"},
+    {"word": "tooth", "type": "n", "vietnamese": "răng (bánh răng)"},
+    {"word": "wheel", "type": "n", "vietnamese": "bánh xe, bánh răng"},
+    {"word": "motion", "type": "n", "vietnamese": "chuyển động"},
+    {"word": "rock", "type": "v", "vietnamese": "lắc, đung đưa"},
+    {"word": "pendulum", "type": "n", "vietnamese": "con lắc"},
+    {"word": "beat", "type": "v", "vietnamese": "dao động, nhịp"},
+    {"word": "grandfather clock", "type": "n", "vietnamese": "đồng hồ quả lắc lớn kiểu cổ điển"},
+    {"word": "accurate", "type": "adj", "vietnamese": "chính xác"},
+    {"word": "integral", "type": "adj", "vietnamese": "không thể thiếu, cần thiết"},
+    
+    {"word": "Federal Aviation Administration", "type": "", "vietnamese": "Cục Hàng không Liên bang Mỹ"},
+    {"word": "regulate", "type": "v", "vietnamese": "điều chỉnh, quy định"},
+    {"word": "oversee", "type": "v", "vietnamese": "giám sát"},
+    {"word": "operation", "type": "n", "vietnamese": "hoạt động, sự vận hành"},
+    {"word": "aircraft", "type": "n", "vietnamese": "máy bay"},
+    {"word": "quite", "type": "adv", "vietnamese": "khá, tương đối"},
+    {"word": "congested", "type": "adj", "vietnamese": "đông đúc, tắc nghẽn"},
+    {"word": "flight", "type": "n", "vietnamese": "chuyến bay"},
+    {"word": "traffic", "type": "n", "vietnamese": "lưu lượng, giao thông"},
+    {"word": "control", "type": "n", "vietnamese": "sự kiểm soát"},
+    {"word": "advantage", "type": "n", "vietnamese": "lợi thế"},
+    {"word": "communication", "type": "n", "vietnamese": "sự liên lạc"},
+    {"word": "rudimentary", "type": "adj", "vietnamese": "thô sơ, sơ khai"},
+    {"word": "full-scale", "type": "adj", "vietnamese": "toàn diện, quy mô đầy đủ"},
+    {"word": "airspace", "type": "n", "vietnamese": "vùng trời, không phận"},
+    {"word": "fortuitous", "type": "adj", "vietnamese": "tình cờ, ngẫu nhiên"},
+    {"word": "jet", "type": "n", "vietnamese": "phản lực"},
+    {"word": "engine", "type": "n", "vietnamese": "động cơ"},
+    {"word": "margin", "type": "n", "vietnamese": "giới hạn, biên độ"},
+    {"word": "consist", "type": "v", "vietnamese": "bao gồm"},
+    {"word": "depart", "type": "v", "vietnamese": "rời đi, cất cánh"},
+    {"word": "realise", "type": "v", "vietnamese": "nhận ra, nhận thức"},
+    {"word": "element", "type": "n", "vietnamese": "yếu tố"},
+    {"word": "put into effect", "type": "", "vietnamese": "thực thi, áp dụng"},
+    {"word": "virtually", "type": "adv", "vietnamese": "hầu như, gần như"},
+    {"word": "entire", "type": "adj", "vietnamese": "toàn bộ"},
+    {"word": "blanket", "type": "v", "vietnamese": "bao phủ"},
+    {"word": "vicinity", "type": "n", "vietnamese": "vùng lân cận"},
+    {"word": "elsewhere", "type": "adv", "vietnamese": "nơi khác"},
+    {"word": "recreational", "type": "adj", "vietnamese": "mang tính giải trí"},
+    {"word": "while", "type": "n", "vietnamese": "khoảng thời gian ngắn"},
+    {"word": "restriction", "type": "n", "vietnamese": "sự hạn chế"},
+    {"word": "impose", "type": "v", "vietnamese": "áp đặt"},
+    {"word": "below", "type": "adv", "vietnamese": "bên dưới"},
+    {"word": "recognise", "type": "v", "vietnamese": "công nhận, nhận ra"},
+    {"word": "reliance", "type": "n", "vietnamese": "sự phụ thuộc"},
+    {"word": "navigational", "type": "adj", "vietnamese": "thuộc về định vị, dẫn đường"},
+    {"word": "possess", "type": "v", "vietnamese": "sở hữu"},
+    {"word": "above", "type": "adv", "vietnamese": "phía trên"},
+    {"word": "beyond", "type": "adv", "vietnamese": "vượt quá"},
+    {"word": "designate", "type": "v", "vietnamese": "chỉ định"},
+    {"word": "letter", "type": "n", "vietnamese": "chữ cái"}
 ];
 // Hardcoded login credentials
 const credentials = {
@@ -375,6 +439,7 @@ function endQuiz() {
   wordInput.disabled = true;
   typeInput.disabled = true;
 }
+
 
 
 
