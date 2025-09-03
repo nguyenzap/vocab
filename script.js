@@ -459,8 +459,8 @@ const vocabLists = {
 const credentials = {
   truong: "1234",
   khiem: "1234",
-   cu1: 1234",
-   cu2: 1234",
+   cu1: "1234",
+   cu2: "1234",
 };
 
 let currentVocabList = [];
@@ -517,7 +517,7 @@ function loginFunction() {
   loginFeedback.textContent = "Đăng nhập thành công!";
   loginFeedback.style.color = "green";
   // Set the vocabulary list based on the username
-  currentVocabList = vocabLists[username] || [];
+  currentVocabList = vocabLists[username];
   startExam();
 }
 
@@ -668,6 +668,7 @@ function endQuiz() {
   wordInput.disabled = true;
   typeInput.disabled = true;
 }
+
 
 
 
