@@ -94,6 +94,42 @@ const vocab_truong = [
 ];
 
 const vocabListKhiem = [
+   {"word": "establishment", "type": "n", "vietnamese": "sự thành lập"},
+    {"word": "regulate", "type": "v", "vietnamese": "điều tiết, quản lý"},
+    {"word": "oversee", "type": "v", "vietnamese": "giám sát"},
+    {"word": "congested", "type": "adj", "vietnamese": "đông đúc, tắc nghẽn"},
+    {"word": "procedure", "type": "n", "vietnamese": "thủ tục, quy trình"},
+    {"word": "manually", "type": "adv", "vietnamese": "bằng tay, thủ công"},
+    {"word": "purely", "type": "adv", "vietnamese": "thuần túy, hoàn toàn"},
+    {"word": "rudimentary", "type": "adj", "vietnamese": "sơ khai, thô sơ"},
+    {"word": "elsewhere", "type": "adv", "vietnamese": "ở nơi khác"},
+    {"word": "recreational", "type": "adj", "vietnamese": "mang tính giải trí"},
+    {"word": "vicinity", "type": "n", "vietnamese": "vùng lân cận"},
+    {"word": "aviation", "type": "n", "vietnamese": "hàng không"},
+    {"word": "commercial", "type": "adj", "vietnamese": "thương mại"},
+    {"word": "operation", "type": "n", "vietnamese": "hoạt động, vận hành"},
+    {"word": "govern", "type": "v", "vietnamese": "chi phối, điều chỉnh"},
+    {"word": "roughly", "type": "adv", "vietnamese": "xấp xỉ, đại khái"},
+    {"word": "municipal", "type": "adj", "vietnamese": "thuộc đô thị/thành phố"},
+    {"word": "metropolitan", "type": "adj", "vietnamese": "thuộc đô thị lớn"},
+    {"word": "compelling", "type": "adj", "vietnamese": "thuyết phục, hấp dẫn"},
+    {"word": "genuine", "type": "adj", "vietnamese": "thật, xác thực"},
+    {"word": "so", "type": "adv", "vietnamese": "đến mức, như vậy"},
+    {"word": "far", "type": "adv", "vietnamese": "cho đến nay"},
+    {"word": "suspect", "type": "v", "vietnamese": "nghi ngờ, cho rằng"},
+    {"word": "detect", "type": "v", "vietnamese": "phát hiện"},
+    {"word": "attitude", "type": "n", "vietnamese": "thái độ, quan điểm"},
+    {"word": "telepathy", "type": "n", "vietnamese": "thần giao cách cảm"},
+    {"word": "meditation", "type": "n", "vietnamese": "thiền định"},
+    {"word": "indicate", "type": "v", "vietnamese": "chỉ ra, cho thấy"},
+    {"word": "alter", "type": "v", "vietnamese": "thay đổi"},
+    {"word": "drastically", "type": "adv", "vietnamese": "mạnh mẽ, đáng kể"},
+    {"word": "trial", "type": "n", "vietnamese": "thử nghiệm"},
+    {"word": "mechanism", "type": "n", "vietnamese": "cơ chế, cách thức"},
+    {"word": "pose", "type": "v", "vietnamese": "đặt ra (vấn đề, khó khăn)"}
+   ];
+
+const vocab_cu3 = [
    {"word": "admire",       "type": "v",   "vietnamese": "ngưỡng mộ"},
     {"word": "volunteer",    "type": "v",   "vietnamese": "tình nguyện"},
     {"word": "army",         "type": "n",   "vietnamese": "quân đội"},
@@ -132,7 +168,6 @@ const vocabListKhiem = [
     {"word": "hand", "type": "v", "vietnamese": "trao, đưa"},
     {"word": "out", "type": "adv", "vietnamese": "ra ngoài"},
     {"word": "interactive", "type": "adj", "vietnamese": "tương tác"},
-    {"word": "CD-ROM", "type": "n", "vietnamese": "đĩa CD-ROM"},
     {"word": "layout", "type": "n", "vietnamese": "bố cục"},
     {"word": "sequence", "type": "n", "vietnamese": "trình tự"},
     {"word": "cetera", "type": "n", "vietnamese": "những thứ khác, v.v."},
@@ -453,7 +488,8 @@ const vocabLists = {
   truong: vocab_truong,
   khiem: vocabListKhiem,
    cu1: vocab_cu1,
-   cu2: vocab_cu2
+   cu2: vocab_cu2,
+   cu3: vocab_cu3
 };
 
 const credentials = {
@@ -461,6 +497,7 @@ const credentials = {
   khiem: "1234",
    cu1: "1234",
    cu2: "1234",
+   cu3: "1234"
 };
 
 let currentVocabList = [];
@@ -668,6 +705,7 @@ function endQuiz() {
   wordInput.disabled = true;
   typeInput.disabled = true;
 }
+
 
 
 
