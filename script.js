@@ -126,7 +126,35 @@ const vocabListKhiem = [
     {"word": "drastically", "type": "adv", "vietnamese": "mạnh mẽ, đáng kể"},
     {"word": "trial", "type": "n", "vietnamese": "thử nghiệm"},
     {"word": "mechanism", "type": "n", "vietnamese": "cơ chế, cách thức"},
-    {"word": "pose", "type": "v", "vietnamese": "đặt ra (vấn đề, khó khăn)"}
+    {"word": "pose", "type": "v", "vietnamese": "đặt ra (vấn đề, khó khăn)"},
+    {"word": "sealed", "type": "adj", "vietnamese": "kín, được niêm phong/cách ly"},
+    {"word": "let", "type": "v", "vietnamese": "cho phép (ánh sáng/khí…) lọt vào"},
+    {"word": "session", "type": "n", "vietnamese": "buổi (thí nghiệm/làm việc)"},
+    {"word": "attempt", "type": "v", "vietnamese": "cố gắng"},
+    {"word": "beam", "type": "v", "vietnamese": "truyền/phát (tín hiệu, hình ảnh)"},
+    {"word": "implication", "type": "n", "vietnamese": "hàm ý/hệ quả kéo theo"},
+    {"word": "reveal", "type": "v", "vietnamese": "tiết lộ, cho thấy"},
+    {"word": "argument", "type": "n", "vietnamese": "lập luận"},
+    {"word": "conventional", "type": "adj", "vietnamese": "truyền thống"},
+    {"word": "rule out", "type": "phrv", "vietnamese": "loại trừ"},
+    {"word": "clue", "type": "n", "vietnamese": "manh mối"},
+    {"word": "reach", "type": "v", "vietnamese": "tới, truyền tới"},
+    {"word": "outright", "type": "adj", "vietnamese": "trắng trợn/rõ ràng"},
+    {"word": "fraud", "type": "n", "vietnamese": "sự gian lận, lừa đảo"},
+    {"word": "disturbed", "type": "adj", "vietnamese": "lo ngại, băn khoăn"},
+    {"word": "demand", "type": "v", "vietnamese": "đòi hỏi, yêu cầu"},
+    {"word": "ignore", "type": "v", "vietnamese": "phớt lờ, bỏ qua"},
+    {"word": "statistical", "type": "adj", "vietnamese": "thuộc thống kê"},
+    {"word": "apparent", "type": "adj", "vietnamese": "rõ ràng, dễ thấy"},
+    {"word": "seem", "type": "v", "vietnamese": "dường như"},
+    {"word": "stem", "type": "v", "vietnamese": "bắt nguồn (từ)"},
+    {"word": "plausible", "type": "adj", "vietnamese": "hợp lý, có vẻ đúng"},
+    {"word": "already", "type": "adv", "vietnamese": "đã, sẵn"},
+    {"word": "particularly", "type": "adv", "vietnamese": "đặc biệt là"},
+    {"word": "eventually", "type": "adv", "vietnamese": "cuối cùng thì"},
+    {"word": "existence", "type": "n", "vietnamese": "sự tồn tại"},
+    {"word": "subject to", "type": "phrv", "vietnamese": "cho (ai/cái gì) trải qua (điều gì đó)"},
+    {"word": "put down to", "type": "phrv", "vietnamese": "quy cho (cái gì đó)"}
    ];
 
 const vocab_cu3 = [
@@ -705,6 +733,7 @@ function endQuiz() {
   wordInput.disabled = true;
   typeInput.disabled = true;
 }
+
 
 
 
