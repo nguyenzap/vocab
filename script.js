@@ -77,7 +77,39 @@ const vocabListKhiem = [
     {"word": "reassurance", "type": "n", "vietnamese": "sự trấn an"},
     {"word": "traceable", "type": "adj", "vietnamese": "có thể truy ra, lần theo được"},
     {"word": "bizarre", "type": "adj", "vietnamese": "kỳ quái, kỳ lạ"},
-    {"word": "substance", "type": "n", "vietnamese": "chất (hóa học; vật chất)"}
+    {"word": "substance", "type": "n", "vietnamese": "chất (hóa học; vật chất)"},
+   {"word": "estate agent", "type": "n", "vietnamese": "nhân viên môi giới bất động sản"},
+{"word": "consist of", "type": "phrv", "vietnamese": "bao gồm, gồm có"},
+{"word": "per year", "type": "", "vietnamese": "mỗi năm, theo năm"},
+
+{"word": "venue", "type": "n", "vietnamese": "địa điểm tổ chức sự kiện"},
+{"word": "exhibition", "type": "n", "vietnamese": "cuộc triển lãm"},
+{"word": "intend", "type": "v", "vietnamese": "dự định, có ý định"},
+{"word": "get involved in", "type": "", "vietnamese": "tham gia/dính líu vào"},
+{"word": "find", "type": "v", "vietnamese": "nhận thấy/cảm thấy (find + object + adj)"},
+{"word": "wisely", "type": "adv", "vietnamese": "một cách khôn ngoan"},
+{"word": "contract", "type": "n", "vietnamese": "hợp đồng"},
+{"word": "acquisition", "type": "n", "vietnamese": "sự tiếp thu (kiến thức/kỹ năng)"},
+{"word": "indigenous", "type": "adj", "vietnamese": "bản địa, thuộc thổ dân"},
+{"word": "Portuguese", "type": "adj", "vietnamese": "thuộc về/tiếng Bồ Đào Nha"},
+
+{"word": "spotlight", "type": "n", "vietnamese": "tiêu điểm (ánh đèn sân khấu)"},
+{"word": "already", "type": "adv", "vietnamese": "đã, sớm hơn mong đợi"},
+{"word": "actually", "type": "adv", "vietnamese": "thực ra, thật sự"},
+{"word": "cater", "type": "v", "vietnamese": "cung cấp dịch vụ/đáp ứng nhu cầu"},
+{"word": "enormous", "type": "adj", "vietnamese": "rất lớn, khổng lồ"},
+{"word": "broadcast", "type": "n", "vietnamese": "chương trình phát sóng"},
+{"word": "spectacular", "type": "adj", "vietnamese": "ngoạn mục, ấn tượng"},
+{"word": "statement", "type": "n", "vietnamese": "bản tuyên bố, lời phát biểu"},
+{"word": "combine", "type": "v", "vietnamese": "kết hợp"},
+{"word": "agency", "type": "n", "vietnamese": "cơ quan, hãng dịch vụ"},
+{"word": "whether", "type": "", "vietnamese": "liệu rằng, liệu có… hay không"},
+{"word": "proper", "type": "adj", "vietnamese": "đúng mực, thích hợp"},
+{"word": "demotivated", "type": "adj", "vietnamese": "mất động lực"},
+{"word": "otherwise", "type": "adv", "vietnamese": "nếu không thì"},
+{"word": "suspicious", "type": "adj", "vietnamese": "nghi ngờ, cảnh giác"},
+{"word": "administration", "type": "n", "vietnamese": "công tác quản trị, ban quản lý"},
+{"word": "definite", "type": "adj", "vietnamese": "chắc chắn, dứt khoát"}
    ];
 
 
@@ -752,6 +784,7 @@ function endQuiz() {
   wordInput.disabled = true;
   typeInput.disabled = true;
 }
+
 
 
 
