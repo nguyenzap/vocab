@@ -15,7 +15,6 @@
     <button id="login-btn">Đăng nhập</button>
     <div id="login-feedback"></div>
   </div>
-  
   <!-- Quiz Screen -->
   <div id="quiz-screen" style="display: none;">
     <div id="progress">Đã đúng: 0/5</div>
@@ -27,6 +26,7 @@
       <input type="text" id="typeInput" placeholder="Nhập loại từ" maxlength="5">
       <button id="check-btn">Xác nhận</button>
     </div>
+  
     <!-- Chuyển "Gợi ý" thành hai nút riêng biệt và hai ô hiển thị -->
     <div>
       <button id="word-hint-btn">Gợi ý từ vựng</button>
@@ -43,9 +43,30 @@
   </div>
   
   <!-- Audio elements for sound effects -->
+  <!-- Manage Vocab Panel -->
+  <section id="manage">
+    <h2>Manage Vocab</h2>
+
+    <form id="addForm">
+      <input name="list" placeholder="list" required />
+      <input name="word" placeholder="word" required />
+      <input name="meaning" placeholder="meaning" required />
+      <input name="hint" placeholder="hint" />
+      <button type="submit">Add</button>
+    </form>
+
+    <button id="refresh">Refresh</button>
+    <table id="grid" border="1">
+      <thead><tr><th>word</th><th>meaning</th><th>hint</th><th>list</th><th>active</th><th>actions</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  
   <audio id="correct-sound" src="win.wav"></audio>
   <audio id="wrong-sound" src="fail.wav"></audio>
   
   <script src="script.js"></script>
 </body>
+
 </html>
