@@ -895,6 +895,42 @@ async function deleteWord(id) {
 }
 
 
+// ---- Manage panel wiring ----
+const grid = document.querySelector('#grid tbody');
+document.querySelector('#refresh').addEventListener('click', async () => {
+  const { data } = await listWords(); // requires listWords from earlier setup
+  grid.innerHTML = data.map(r => `
+    <tr data-id="${r.id}">
+      <td>${r.word}</td>
+      <td>${r.meaning}</td>
+      <td>${r.hint || ''}</td>
+      <td>${r.list}</td>
+      <td>${r.active}</td>
+      <td><button class="deactivate">Deactivate</button></td>
+    </tr>`).join('');
+});
+document.querySelector('#addForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  await createWord({
+    list: f.get('list'),
+    word: f.get('word'),
+    meaning: f.get('meaning'),
+    hint: f.get('hint')
+  });
+  e.target.reset();
+  document.querySelector('#refresh').click();
+});
+grid.addEventListener('click', async (e) => {
+  if (!e.target.classList.contains('deactivate')) return;
+  const id = e.target.closest('tr').dataset.id;
+  await deleteWord(id);
+  document.querySelector('#refresh').click();
+});
+
+
+
+
 
 
 
