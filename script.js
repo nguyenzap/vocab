@@ -843,6 +843,58 @@ function endQuiz() {
   typeInput.disabled = true;
 }
 
+const API_URL = 'https://script.google.com/macros/s/AKfycbzu9q5g9uB5o3wKbfH9xcmugQrHfXzAiX_IewXn9e4UZ1Y09cZ-yLdnzGAulO7rTi2Q6Q/exec';
+const API_TOKEN = 'nguyengiap1234';
+
+// READ
+async function listWords(listName, {active=true} = {}) {
+  const url = new URL(API_URL);
+  if (listName) url.searchParams.set('list', listName);
+  url.searchParams.set('active', String(active));
+  const res = await fetch(url, { method: 'GET' });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'API error');
+  return json; // {data, lists}
+}
+
+// CREATE
+async function createWord({list, word, meaning, hint=''}) {
+  const qs = new URLSearchParams({ token: API_TOKEN });
+  const res = await fetch(`${API_URL}?${qs}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids preflight
+    body: JSON.stringify({ action: 'create', list, word, meaning, hint }),
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'API error');
+  return json.id;
+}
+
+// UPDATE
+async function updateWord({id, ...fields}) {
+  const qs = new URLSearchParams({ token: API_TOKEN });
+  const res = await fetch(`${API_URL}?${qs}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'update', id, ...fields }),
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'API error');
+}
+
+// DELETE (soft: active=false)
+async function deleteWord(id) {
+  const qs = new URLSearchParams({ token: API_TOKEN });
+  const res = await fetch(`${API_URL}?${qs}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'delete', id }),
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'API error');
+}
+
+
 
 
 
