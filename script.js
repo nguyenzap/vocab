@@ -846,53 +846,41 @@ function endQuiz() {
 const API_URL = 'https://script.google.com/macros/s/AKfycbzu9q5g9uB5o3wKbfH9xcmugQrHfXzAiX_IewXn9e4UZ1Y09cZ-yLdnzGAulO7rTi2Q6Q/exec';
 const API_TOKEN = 'nguyengiap1234';
 
-// READ
+async function apiPost(payload, {useToken=true} = {}) {
+  const qs = new URLSearchParams(useToken ? { token: API_TOKEN } : {});
+  const res = await fetch(`${API_URL}?${qs}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+  });
+  const j = await res.json();
+  if (!j.ok) throw new Error(j.error || 'api_error');
+  return j;
+}
+
+async function login(username, password) {
+  return apiPost({ action: 'login', username, password }, { useToken: false });
+}
+
 async function listWords(listName, {active=true} = {}) {
   const url = new URL(API_URL);
   if (listName) url.searchParams.set('list', listName);
   url.searchParams.set('active', String(active));
-  const res = await fetch(url, { method: 'GET' });
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'API error');
-  return json; // {data, lists}
+  const res = await fetch(url);
+  const j = await res.json();
+  if (!j.ok) throw new Error(j.error || 'api_error');
+  return j; // {data, lists}
 }
 
-// CREATE
-async function createWord({list, word, meaning, hint=''}) {
-  const qs = new URLSearchParams({ token: API_TOKEN });
-  const res = await fetch(`${API_URL}?${qs}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids preflight
-    body: JSON.stringify({ action: 'create', list, word, meaning, hint }),
-  });
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'API error');
-  return json.id;
+async function createWord(row) {
+  return apiPost({ action: 'create', ...row });
 }
 
-// UPDATE
-async function updateWord({id, ...fields}) {
-  const qs = new URLSearchParams({ token: API_TOKEN });
-  const res = await fetch(`${API_URL}?${qs}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'update', id, ...fields }),
-  });
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'API error');
+async function bulkCreate(list, items) {
+  // items: [{word, pos, meaning, hint}]
+  return apiPost({ action: 'bulkCreate', list, items });
 }
 
-// DELETE (soft: active=false)
-async function deleteWord(id) {
-  const qs = new URLSearchParams({ token: API_TOKEN });
-  const res = await fetch(`${API_URL}?${qs}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'delete', id }),
-  });
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'API error');
-}
 
 
 // ---- Manage panel wiring ----
@@ -927,6 +915,73 @@ grid.addEventListener('click', async (e) => {
   await deleteWord(id);
   document.querySelector('#refresh').click();
 });
+
+
+function parseVocabText(text) {
+  const out = [];
+  const lines = text.split(/\r?\n/);
+  const rx = /^\s*([A-Za-z][A-Za-z'\/\- ]*)\s*(?:\(([^)]+)\))?\s*:\s*(.+?)\s*$/;
+  for (const line of lines) {
+    const s = line.trim();
+    if (!s) continue;
+    const m = s.match(rx);
+    if (!m) continue; // skip bad lines or report if you prefer
+    const [, word, pos='', meaning] = m;
+    out.push({ word: word.trim(), pos: pos.trim(), meaning: meaning.trim(), hint: '' });
+  }
+  return out;
+}
+
+const bulkBtn = document.getElementById('bulk-parse-add');
+if (bulkBtn) {
+  bulkBtn.addEventListener('click', async () => {
+    const list = document.getElementById('bulk-list').value.trim();
+    const raw = document.getElementById('bulk-input').value;
+    const status = document.getElementById('bulk-status');
+    if (!list) { status.textContent = 'Enter list name'; return; }
+    const items = parseVocabText(raw);
+    if (!items.length) { status.textContent = 'Nothing parsed'; return; }
+    status.textContent = `Uploading ${items.length}…`;
+    try {
+      const { count } = await bulkCreate(list, items);
+      status.textContent = `Added ${count} items to "${list}"`;
+      document.getElementById('refresh').click();
+    } catch (e) {
+      status.textContent = 'Error: ' + e.message;
+    }
+  });
+}
+
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  try {
+    const { user } = await login(username, password);       // server checks giau/1234
+    const listName = user.list;                             // e.g., "giau"
+    const role = user.role;                                 // "student" or "admin"
+
+    // hide student from Manage
+    if (role !== 'admin') document.getElementById('manage').style.display = 'none';
+
+    // show start panel or jump straight to quiz
+    const { data } = await listWords(listName, { active:true });
+    window.currentListName = listName;
+    window.currentVocabList = data.map(r => ({
+      word: r.word,
+      meaning: r.meaning,
+      hint: r.hint || '',
+      pos: r.pos || ''
+    }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    if (typeof nextQuestion === 'function') nextQuestion();
+  } catch {
+    document.getElementById('login-feedback').textContent = 'Sai tài khoản hoặc mật khẩu';
+  }
+});
+
+
+
 
 
 
