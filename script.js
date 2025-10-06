@@ -1,6 +1,7 @@
 import {vocab_cu1} from './vocab/cu1.js';
 import {vocab_cu2} from './vocab/cu2.js';
 import {vocab_cu3} from './vocab/cu3.js';
+import {vocab_cu4} from './vocab/cu4.js';
 import {vocab_truong} from './vocab/truong.js';
 import {vocabListKhiem} from './vocab/khiem.js';
 
@@ -10,17 +11,19 @@ import {vocabListKhiem} from './vocab/khiem.js';
 const vocabLists = {
   truong: vocab_truong,
   khiem: vocabListKhiem,
-   cu1: vocab_cu1,
-   cu2: vocab_cu2,
-   cu3: vocab_cu3
+  cu1: vocab_cu1,
+  cu2: vocab_cu2,
+  cu3: vocab_cu3,
+  cu4: vocab_cu4
 };
 
 const credentials = {
   truong: "1234",
   khiem: "1234",
-   cu1: "1234",
-   cu2: "1234",
-   cu3: "1234"
+  cu1: "1234",
+  cu2: "1234",
+  cu3: "1234",
+  cu4: "1234"
 };
 
 let currentVocabList = [];
