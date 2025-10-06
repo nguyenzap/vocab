@@ -114,7 +114,7 @@ function startExam() {
   quizScreen.style.display = "block";
   score = 0;
   unseenWords = [...currentVocabList];
-  wrongStack = [];
+  wrongQueue = []; 
   progressEl.textContent = `Đã đúng: ${score}/${currentVocabList.length}`;
   nextQuestion();
 }
@@ -228,14 +228,3 @@ function endQuiz() {
   wordInput.disabled = true;
   typeInput.disabled = true;
 }
-
-
-
-
-
-
-
-
-
-
-
