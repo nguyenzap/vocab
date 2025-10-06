@@ -1,8 +1,8 @@
-import {vocab_cu1} from './cu1.js';
-import {vocab_cu2} from './cu2.js';
-import {vocab_cu3} from './cu3.js';
+import {vocab_cu1} from './vocab/cu1.js';
+import {vocab_cu2} from './vocab/cu2.js';
+import {vocab_cu3} from './vocab/cu3.js';
 import {vocab_truong} from './truong.js';
-import {vocabListKhiem} from './khiem.js';
+import {vocabListKhiem} from './vocab/khiem.js';
 
 
 
