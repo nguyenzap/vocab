@@ -93,15 +93,15 @@ export function sanitizeTags(value) {
     .filter(Boolean);
 }
 
-export function parseFirebaseError(error, fallback = 'Da xay ra loi, vui long thu lai.') {
+export function parseFirebaseError(error, fallback = 'Đã xảy ra lỗi, vui lòng thử lại.') {
   if (!error || typeof error !== 'object') return fallback;
   const code = error.code || '';
-  if (code.includes('auth/invalid-credential')) return 'Email hoac mat khau khong dung.';
-  if (code.includes('auth/email-already-in-use')) return 'Email nay da duoc dang ky.';
-  if (code.includes('auth/weak-password')) return 'Mat khau phai co it nhat 6 ky tu.';
-  if (code.includes('auth/too-many-requests')) return 'Ban thao tac qua nhieu, vui long doi.';
-  if (code.includes('permission-denied')) return 'Ban khong co quyen thuc hien thao tac nay.';
-  if (code.includes('unavailable')) return 'Loi ket noi, vui long kiem tra internet.';
+  if (code.includes('auth/invalid-credential')) return 'Email hoặc mật khẩu không đúng.';
+  if (code.includes('auth/email-already-in-use')) return 'Email này đã được đăng ký.';
+  if (code.includes('auth/weak-password')) return 'Mật khẩu phải có ít nhất 6 ký tự.';
+  if (code.includes('auth/too-many-requests')) return 'Bạn thao tác quá nhiều, vui lòng đợi.';
+  if (code.includes('permission-denied')) return 'Bạn không có quyền thực hiện thao tác này.';
+  if (code.includes('unavailable')) return 'Lỗi kết nối, vui lòng kiểm tra internet.';
   return error.message || fallback;
 }
 

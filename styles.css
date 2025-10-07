@@ -231,6 +231,15 @@ textarea {
   gap: 0.4rem;
 }
 
+.list-items li[draggable='true'] {
+  cursor: grab;
+}
+
+.list-items li.dragging {
+  opacity: 0.6;
+  cursor: grabbing;
+}
+
 .list-item-btn {
   width: 100%;
   display: flex;

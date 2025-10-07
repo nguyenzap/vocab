@@ -45,6 +45,8 @@ const state = {
   allVocabsCache: null,
   isSearchMode: false,
   loading: false,
+  draggingListId: null,
+  isBackfillingOrder: false,
   quiz: {
     active: false,
     items: [],
@@ -82,6 +84,8 @@ const refs = {
   modalTitle: document.getElementById('modal-title'),
   modalLabel: document.getElementById('modal-label'),
   modalInput: document.getElementById('modal-input'),
+  modalConfirm: document.getElementById('modal-confirm'),
+  modalCancel: document.getElementById('modal-cancel'),
   quizPanel: document.getElementById('quiz-panel'),
   exitQuizBtn: document.getElementById('exit-quiz-btn'),
   quizProgress: document.getElementById('quiz-progress'),
@@ -164,6 +168,11 @@ function bindEvents() {
     if (!button) return;
     selectList(button.dataset.listId);
   });
+
+  refs.listItems?.addEventListener('dragstart', handleListDragStart);
+  refs.listItems?.addEventListener('dragover', handleListDragOver);
+  refs.listItems?.addEventListener('drop', handleListDrop);
+  refs.listItems?.addEventListener('dragend', handleListDragEnd);
 }
 
 async function subscribeToLists() {
@@ -173,13 +182,15 @@ async function subscribeToLists() {
   state.listUnsub = onSnapshot(
     listsQuery,
     (snapshot) => {
-      state.lists = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+      const rawLists = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+      state.lists = sortListsByOrder(rawLists);
       renderLists();
       if (!state.selectedListId && state.lists.length) {
         selectList(state.lists[0].id);
       } else if (state.selectedListId && !state.lists.find((l) => l.id === state.selectedListId)) {
         resetListSelection();
       }
+      backfillListOrderIfNeeded(rawLists);
     },
     (error) => {
       showToast(parseFirebaseError(error, 'Không thể tải danh sách'), 'error');
@@ -199,14 +210,138 @@ function renderLists() {
   }
   state.lists.forEach((list) => {
     const li = document.createElement('li');
+    li.dataset.listId = list.id;
+    const isDraggable = state.lists.length > 1;
+    if (isDraggable) {
+      li.setAttribute('draggable', 'true');
+    }
     const button = document.createElement('button');
     button.className = 'list-item-btn';
     if (list.id === state.selectedListId) button.classList.add('active');
     button.dataset.listId = list.id;
+    if (isDraggable) {
+      button.setAttribute('draggable', 'true');
+    }
     button.innerHTML = `<span>${list.name ?? 'Chưa đặt tên'}</span>`;
     li.append(button);
     refs.listItems.append(li);
   });
+}
+
+function sortListsByOrder(lists) {
+  return [...lists].sort((a, b) => {
+    const orderA = typeof a.order === 'number' ? a.order : Number.POSITIVE_INFINITY;
+    const orderB = typeof b.order === 'number' ? b.order : Number.POSITIVE_INFINITY;
+    if (orderA !== orderB) return orderA - orderB;
+    const timeA = a.createdAt?.toMillis?.() ?? 0;
+    const timeB = b.createdAt?.toMillis?.() ?? 0;
+    return timeB - timeA;
+  });
+}
+
+async function backfillListOrderIfNeeded(lists) {
+  if (!state.user || state.isBackfillingOrder) return;
+  const needsBackfill = lists.some((list) => typeof list.order !== 'number');
+  if (!needsBackfill) return;
+  state.isBackfillingOrder = true;
+  try {
+    const sorted = sortListsByOrder(lists);
+    const batch = writeBatch(db);
+    let hasChanges = false;
+    sorted.forEach((list, index) => {
+      if (typeof list.order === 'number' && list.order === index) {
+        return;
+      }
+      hasChanges = true;
+      const listRef = doc(db, 'users', state.user.uid, 'lists', list.id);
+      batch.update(listRef, { order: index });
+    });
+    if (hasChanges) {
+      await batch.commit();
+    }
+  } catch (error) {
+    showToast(parseFirebaseError(error, 'Unable to sync list order'), 'error');
+  } finally {
+    state.isBackfillingOrder = false;
+  }
+}
+
+function handleListDragStart(event) {
+  if (state.lists.length < 2) return;
+  const li = event.target.closest('li[data-list-id]');
+  if (!li) return;
+  state.draggingListId = li.dataset.listId;
+  li.classList.add('dragging');
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', state.draggingListId);
+  }
+}
+
+function handleListDragOver(event) {
+  if (!state.draggingListId || !refs.listItems) return;
+  event.preventDefault();
+  const draggingEl = refs.listItems.querySelector('li.dragging');
+  if (!draggingEl) return;
+  const li = event.target.closest('li[data-list-id]');
+  if (!li || li === draggingEl) return;
+  const rect = li.getBoundingClientRect();
+  const shouldInsertBefore = event.clientY < rect.top + rect.height / 2;
+  if (shouldInsertBefore) {
+    refs.listItems.insertBefore(draggingEl, li);
+  } else {
+    refs.listItems.insertBefore(draggingEl, li.nextElementSibling);
+  }
+}
+
+function handleListDrop(event) {
+  if (!state.draggingListId) return;
+  event.preventDefault();
+  applyListOrderFromDom();
+  handleListDragEnd();
+}
+
+function handleListDragEnd() {
+  const draggingEl = refs.listItems?.querySelector('li.dragging');
+  draggingEl?.classList.remove('dragging');
+  state.draggingListId = null;
+}
+
+function applyListOrderFromDom() {
+  if (!refs.listItems) return;
+  const orderedIds = Array.from(refs.listItems.querySelectorAll('li[data-list-id]')).map(
+    (item) => item.dataset.listId
+  );
+  if (!orderedIds.length || orderedIds.length !== state.lists.length) return;
+  const orderedLists = orderedIds
+    .map((id) => state.lists.find((list) => list.id === id))
+    .filter(Boolean);
+  if (orderedLists.length !== state.lists.length) return;
+  const updates = [];
+  const reordered = orderedLists.map((list, index) => {
+    if (list.order !== index) {
+      updates.push({ id: list.id, order: index });
+    }
+    return { ...list, order: index };
+  });
+  if (!updates.length) return;
+  state.lists = reordered;
+  renderLists();
+  persistListOrder(updates);
+}
+
+async function persistListOrder(updates) {
+  if (!state.user || !updates.length) return;
+  try {
+    const batch = writeBatch(db);
+    updates.forEach(({ id, order }) => {
+      const listRef = doc(db, 'users', state.user.uid, 'lists', id);
+      batch.update(listRef, { order });
+    });
+    await batch.commit();
+  } catch (error) {
+    showToast(parseFirebaseError(error, 'Unable to save list order'), 'error');
+  }
 }
 
 function resetListSelection() {
@@ -417,6 +552,7 @@ async function handleCreateList() {
       name: name.trim(),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      order: state.lists.length,
     });
     showToast('Đã tạo danh sách mới.', 'success');
   } catch (error) {
@@ -844,17 +980,28 @@ function openPrompt({ title, label, value = '', placeholder = '' }) {
     const fallback = window.prompt(title, value);
     return Promise.resolve(fallback?.trim() || '');
   }
-  refs.modalTitle.textContent = title;
-  refs.modalLabel.textContent = label;
-  refs.modalInput.value = value;
-  refs.modalInput.placeholder = placeholder;
+  const input = refs.modalInput;
+  if (refs.modalTitle) refs.modalTitle.textContent = title;
+  if (refs.modalLabel) refs.modalLabel.textContent = label;
+  if (input) {
+    input.value = value;
+    input.placeholder = placeholder;
+  }
+  const handleKeyDown = (event) => {
+    if (event.key !== 'Enter') return;
+    if (event.isComposing || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+    event.preventDefault();
+    refs.modalConfirm?.click();
+  };
+  input?.addEventListener('keydown', handleKeyDown);
   refs.modal.showModal();
-  refs.modalInput.focus();
+  input?.focus();
   return new Promise((resolve) => {
     const handleClose = () => {
+      input?.removeEventListener('keydown', handleKeyDown);
       refs.modal.removeEventListener('close', handleClose);
       const confirmed = refs.modal.returnValue === 'confirm';
-      const inputValue = confirmed ? refs.modalInput.value.trim() : '';
+      const inputValue = confirmed ? input?.value.trim() ?? '' : '';
       resolve(inputValue);
     };
     refs.modal.addEventListener('close', handleClose, { once: true });
