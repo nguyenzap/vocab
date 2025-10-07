@@ -93,8 +93,41 @@ function initAuthPage() {
   const toggleBtn = document.getElementById('auth-toggle-btn');
   const forgotBtn = document.getElementById('auth-forgot-btn');
   const feedbackEl = document.getElementById('auth-feedback');
+  const passwordToggles = form.querySelectorAll('.password-toggle');
+  const toggleEntries = [];
 
   let mode = 'signin';
+
+  passwordToggles.forEach((button) => {
+    const targetId = button.dataset.passwordToggle;
+    if (!targetId) return;
+    const targetInput = document.getElementById(targetId);
+    if (!targetInput) return;
+    const applyState = (visible) => {
+      button.dataset.state = visible ? 'visible' : 'hidden';
+      button.setAttribute('aria-pressed', String(visible));
+      button.setAttribute('aria-label', visible ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu');
+      if (!visible && targetInput.type !== 'password') {
+        targetInput.type = 'password';
+      }
+      if (visible && targetInput.type !== 'text') {
+        targetInput.type = 'text';
+      }
+    };
+    applyState(targetInput.type === 'text');
+    button.addEventListener('click', () => {
+      const nextVisible = targetInput.type === 'password';
+      applyState(nextVisible);
+      targetInput.focus({ preventScroll: true });
+      const valueLength = targetInput.value.length;
+      try {
+        targetInput.setSelectionRange(valueLength, valueLength);
+      } catch (error) {
+        // Ignore selection range errors on unsupported browsers.
+      }
+    });
+    toggleEntries.push({ input: targetInput, applyState });
+  });
 
   const setMode = (nextMode) => {
     mode = nextMode;
@@ -104,6 +137,10 @@ function initAuthPage() {
     toggleBtn.textContent = isSignup ? 'Tôi đã có tài khoản' : 'Tôi chưa có tài khoản';
     forgotBtn.classList.toggle('hidden', isSignup);
     confirmField.classList.toggle('hidden', !isSignup);
+    if (!isSignup) {
+      const confirmEntry = toggleEntries.find((entry) => entry.input === confirmInput);
+      confirmEntry?.applyState(false);
+    }
     feedbackEl.textContent = '';
   };
 
