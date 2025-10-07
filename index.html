@@ -1,51 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Vocabulary Quiz</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vocab Coach | Đăng nhập</title>
+  <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
-  <!-- Login Screen -->
-  <div id="login-screen">
-    <h1>Đăng nhập</h1>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button id="login-btn">Đăng nhập</button>
-    <div id="login-feedback"></div>
-  </div>
-  
-  <!-- Quiz Screen -->
-  <div id="quiz-screen" style="display: none;">
-    <div id="progress">Đã đúng: 0/5</div>
-    <div id="question">
-      <p id="vietnamese"></p>
-    </div>
-    <div id="answer-area">
-      <input type="text" id="wordInput" placeholder="Nhập từ" autofocus>
-      <input type="text" id="typeInput" placeholder="Nhập loại từ" maxlength="5">
-      <button id="check-btn">Xác nhận</button>
-    </div>
-    <!-- Chuyển "Gợi ý" thành hai nút riêng biệt và hai ô hiển thị -->
-    <div>
-      <button id="word-hint-btn">Gợi ý từ vựng</button>
-      <span id="letter-hint"></span>
-    </div>
-    <div>
-      <button id="type-hint-btn">Gợi ý loại từ</button>
-      <span id="type-hint"></span>
-    </div>
-    <div id="feedback"></div>
-    <div>
-      <button id="skip-btn">Bỏ qua</button>
-    </div>
-  </div>
-  
-  <!-- Audio elements for sound effects -->
-  <audio id="correct-sound" src="win.wav"></audio>
-  <audio id="wrong-sound" src="fail.wav"></audio>
-  
-  <script type="module" src="script.js"></script>
+<body data-page="auth">
+  <main class="auth-layout">
+    <section class="auth-card">
+      <header class="auth-header">
+        <h1>Vocab Coach</h1>
+        <p class="auth-subtitle">Học từ vựng hiệu quả với danh sách riêng của bạn.</p>
+      </header>
+      <form id="auth-form" class="auth-form" novalidate>
+        <div class="form-field">
+          <label for="auth-email">Email</label>
+          <input id="auth-email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="form-field">
+          <label for="auth-password">Mật khẩu</label>
+          <input id="auth-password" name="password" type="password" autocomplete="current-password" required placeholder="Toi thieu 6 ky tu">
+        </div>
+        <div class="form-field hidden" data-auth-mode="signup">
+          <label for="auth-confirm">Nhập lại mật khẩu</label>
+          <input id="auth-confirm" name="confirmPassword" type="password" autocomplete="new-password">
+        </div>
+        <div class="auth-actions">
+          <button id="auth-submit-btn" type="submit" class="btn primary">Đăng nhập</button>
+          <button id="auth-forgot-btn" type="button" class="btn link">Quên mật khẩu?</button>
+        </div>
+      </form>
+      <footer class="auth-footer">
+        <button id="auth-toggle-btn" class="btn link">Tôi chưa có tài khoản</button>
+        <p id="auth-feedback" class="feedback"></p>
+      </footer>
+    </section>
+  </main>
+  <script type="module" src="./auth.js"></script>
 </body>
 </html>

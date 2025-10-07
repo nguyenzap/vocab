@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vocab Coach | App</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="app">
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  <header class="app-header">
+    <div class="header-info">
+      <h1>Vocab Coach</h1>
+      <p id="user-email" class="user-email"></p>
+    </div>
+    <div class="header-actions">
+      <button id="sign-out-btn" class="btn danger">Đăng xuất</button>
+    </div>
+  </header>
+  <main class="app-layout">
+    <aside class="list-panel">
+      <div class="panel-header">
+        <h2>Từ vựng của bạn</h2>
+        <button id="create-list-btn" class="btn primary small">+ Danh sách mới</button>
+      </div>
+      <nav>
+        <ul id="list-items" class="list-items"></ul>
+      </nav>
+    </aside>
+    <section class="content-panel">
+      <div class="panel-header">
+        <h2 id="current-list-name">Chọn một danh sách</h2>
+        <div class="list-actions">
+          <button id="rename-list-btn" class="btn secondary small" disabled>Đổi tên</button>
+          <button id="delete-list-btn" class="btn danger small" disabled>Xóa</button>
+          <button id="start-practice-btn" class="btn primary small" disabled>Bắt đầu luyện tập</button>
+          <button id="export-list-btn" class="btn secondary small" disabled>Xuất JSONL</button>
+        </div>
+      </div>
+      <section class="controls">
+        <div class="search-group">
+          <input id="search-input" type="search" placeholder="Tìm từ hoặc nghĩa" disabled>
+        </div>
+        <div class="filter-group">
+          <label for="sort-select">Sắp xếp</label>
+          <select id="sort-select" disabled>
+            <option value="createdAt_desc">Mới nhất</option>
+            <option value="createdAt_asc">Cũ nhất</option>
+            <option value="word_asc">Từ A - Z</option>
+            <option value="word_desc">Từ Z - A</option>
+          </select>
+          <label for="page-size-select">Số dòng</label>
+          <select id="page-size-select" disabled>
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </section>
+      <section class="table-wrapper">
+        <table id="vocab-table" class="vocab-table">
+          <thead>
+            <tr>
+              <th>Từ</th>
+              <th>Loại từ</th>
+              <th>Nghĩa</th>
+              <th>Thẻ</th>
+              <th>Ngày tạo</th>
+            </tr>
+          </thead>
+          <tbody id="vocab-tbody">
+            <tr>
+              <td colspan="5" class="empty-state">Chọn một danh sách để bắt đầu.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span id="pagination-info"></span>
+          <div class="pagination-buttons">
+            <button id="prev-page-btn" class="btn secondary small" disabled>Trang trước</button>
+            <button id="next-page-btn" class="btn secondary small" disabled>Trang sau</button>
+          </div>
+        </div>
+      </section>
+      <section class="form-section">
+        <div class="panel-header">
+          <h3>Thêm từ mới</h3>
+          <button id="bulk-help-btn" class="btn link small">Hướng dẫn định dạng</button>
+        </div>
+        <textarea id="bulk-input" rows="8" placeholder='Moi dong la mot object JSON hoac dict Python. Vi du: {"word":"gather","type":"v","meaning":"tu hop"}' disabled></textarea>
+        <button id="bulk-add-btn" class="btn secondary" disabled>Thêm</button>
+        <pre id="bulk-feedback" class="bulk-feedback"></pre>
+      </section>
+    </section>
+  </main>
+  <section id="quiz-panel" class="quiz-panel hidden">
+    <div class="quiz-card">
+      <header class="quiz-header">
+        <h2>Chế độ luyện tập</h2>
+        <button id="exit-quiz-btn" type="button" class="btn secondary small">Thoát</button>
+      </header>
+      <p id="quiz-subtitle" class="quiz-subtitle">Nhập đúng từ tiếng Anh và loại từ tương ứng.</p>
+      <p id="quiz-progress" class="quiz-progress"></p>
+      <div class="quiz-meaning">
+        <span class="quiz-meaning-label">Nghia tieng Viet</span>
+        <span id="quiz-meaning-text" class="quiz-meaning-text"></span>
+      </div>
+      <div class="quiz-inputs">
+        <label>Từ tiếng Anh
+          <input id="quiz-word-input" autocomplete="off" placeholder="Nhập từ ở đây">
+        </label>
+        <label>Loại từ
+          <input id="quiz-type-input" autocomplete="off" placeholder="Danh từ, động từ,..">
+        </label>
+      </div>
+      <div class="quiz-buttons">
+        <button id="quiz-check-btn" type="button" class="btn primary">Kiểm tra</button>
+        <button id="quiz-skip-btn" type="button" class="btn secondary">Bỏ qua</button>
+      </div>
+      <p id="quiz-feedback" class="quiz-feedback"></p>
+      <div class="quiz-hints">
+        <div>
+          <button id="quiz-word-hint-btn" type="button" class="btn hint">Gợi ý từ vựng</button>
+          <span id="quiz-letter-hint" class="quiz-hint-text"></span>
+        </div>
+        <div>
+          <button id="quiz-type-hint-btn" type="button" class="btn hint">Gợi ý loại từ</button>
+          <span id="quiz-type-hint" class="quiz-hint-text"></span>
+        </div>
+      </div>
+      <audio id="correct-sound" src="./win.wav"></audio>
+      <audio id="wrong-sound" src="./fail.wav"></audio>
+    </div>
+  </section>
+  <dialog id="modal" class="modal">
+    <form method="dialog" class="modal-content">
+      <h3 id="modal-title"></h3>
+      <label id="modal-label" for="modal-input"></label>
+      <input id="modal-input" required>
+      <menu class="modal-actions">
+        <button id="modal-cancel" value="cancel" class="btn secondary">Huy</button>
+        <button id="modal-confirm" value="confirm" class="btn primary">Dong y</button>
+      </menu>
+    </form>
+  </dialog>
+  <script type="module" src="./auth.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
