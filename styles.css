@@ -193,6 +193,134 @@ p {
   color: #f8fafc;
 }
 
+.practice-mode {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: nowrap;
+}
+
+.practice-mode label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.practice-mode-select {
+  min-width: 8.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--text);
+}
+
+.quiz-meaning {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.quiz-meaning-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.quiz-meaning-label {
+  font-weight: 600;
+}
+
+.quiz-audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.quiz-audio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--secondary);
+  color: var(--text);
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.quiz-audio-btn:hover {
+  background: rgba(51, 65, 85, 0.8);
+}
+
+.quiz-audio-btn:active {
+  transform: scale(0.97);
+}
+
+.quiz-audio-btn-text {
+  font-weight: 500;
+}
+
+.quiz-audio-status {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.audio-prefetch-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 1200;
+}
+
+.audio-prefetch-card {
+  width: min(420px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.75rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  text-align: center;
+}
+
+.audio-prefetch-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.audio-prefetch-text {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.audio-prefetch-progress {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  overflow: hidden;
+}
+
+.audio-prefetch-progress-bar {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), #38bdf8);
+  transition: width 0.3s ease;
+}
+
 input,
 textarea,
 select {

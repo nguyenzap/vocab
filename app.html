@@ -8,6 +8,16 @@
 </head>
 <body data-page="app">
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  <div id="audio-prefetch-overlay" class="audio-prefetch-overlay hidden" role="dialog" aria-modal="true">
+    <div class="audio-prefetch-card">
+      <h3>Đang chuẩn bị audio</h3>
+      <p id="audio-prefetch-status" class="audio-prefetch-text"></p>
+      <div class="audio-prefetch-progress">
+        <div id="audio-prefetch-progress-bar" class="audio-prefetch-progress-bar"></div>
+      </div>
+      <button id="audio-prefetch-cancel-btn" type="button" class="btn secondary small">Hủy</button>
+    </div>
+  </div>
   <header class="app-header">
     <div class="header-info">
       <h1>Vocab Coach</h1>
@@ -33,6 +43,13 @@
         <div class="list-actions">
           <button id="rename-list-btn" class="btn secondary small" disabled>Đổi tên</button>
           <button id="delete-list-btn" class="btn danger small" disabled>Xóa</button>
+          <div class="practice-mode">
+            <label for="practice-mode-select">Chế độ</label>
+            <select id="practice-mode-select" class="practice-mode-select" disabled>
+              <option value="meaning">Hiện nghĩa</option>
+              <option value="audio">Nghe từ</option>
+            </select>
+          </div>
           <button id="start-practice-btn" class="btn primary small" disabled>Bắt đầu luyện tập</button>
           <button id="export-list-btn" class="btn secondary small" disabled>Xuất JSONL</button>
         </div>
@@ -102,8 +119,17 @@
       <p id="quiz-subtitle" class="quiz-subtitle">Nhập đúng từ tiếng Anh và loại từ tương ứng.</p>
       <p id="quiz-progress" class="quiz-progress"></p>
       <div class="quiz-meaning">
-        <span class="quiz-meaning-label">Nghia tieng Viet</span>
+        <div class="quiz-meaning-header">
+          <span class="quiz-meaning-label">Nghĩa tiếng Việt</span>
+          <button id="quiz-meaning-hint-btn" type="button" class="btn hint small">Hiển thị</button>
+        </div>
         <span id="quiz-meaning-text" class="quiz-meaning-text"></span>
+      </div>
+      <div id="quiz-audio-controls" class="quiz-audio-controls hidden">
+        <button id="quiz-audio-btn" type="button" class="quiz-audio-btn" aria-label="Phát âm thanh">
+          <span aria-hidden="true">&#128266;</span><span class="quiz-audio-btn-text">Nghe</span>
+        </button>
+        <span id="quiz-audio-status" class="quiz-audio-status"></span>
       </div>
       <div class="quiz-inputs">
         <label>Từ tiếng Anh
@@ -128,6 +154,7 @@
           <span id="quiz-type-hint" class="quiz-hint-text"></span>
         </div>
       </div>
+      <audio id="quiz-audio-player"></audio>
       <audio id="correct-sound" src="./win.wav"></audio>
       <audio id="wrong-sound" src="./fail.wav"></audio>
     </div>
