@@ -47,9 +47,23 @@
           <div class="practice-mode">
             <label for="practice-mode-select">Chế độ</label>
             <select id="practice-mode-select" class="practice-mode-select" disabled>
-              <option value="meaning">Hiện nghĩa</option>
-              <option value="audio">Nghe từ</option>
+              <option value="meaning">Kiểm Tra Nghĩa</option>
+              <option value="word">Kiểm Tra Từ</option>
+              <option value="audio">Nghe Từ</option>
             </select>
+            <button
+              id="type-check-toggle"
+              class="toggle-switch"
+              type="button"
+              aria-pressed="true"
+              aria-label="Kiểm tra loại từ: Bật"
+            >
+              <span class="toggle-track">
+                <span class="toggle-text toggle-text-on" aria-hidden="true">ON</span>
+                <span class="toggle-text toggle-text-off" aria-hidden="true">OFF</span>
+                <span class="toggle-thumb" aria-hidden="true"></span>
+              </span>
+            </button>
           </div>
           <button id="start-practice-btn" class="btn primary small" disabled>Bắt đầu luyện tập</button>
           <button id="export-list-btn" class="btn secondary small" disabled>Xuất JSONL</button>
@@ -121,7 +135,7 @@
       <p id="quiz-progress" class="quiz-progress"></p>
       <div class="quiz-meaning">
         <div class="quiz-meaning-header">
-          <span class="quiz-meaning-label">Nghĩa tiếng Việt</span>
+          <span id="quiz-meaning-label" class="quiz-meaning-label">Nghĩa tiếng Việt</span>
           <button id="quiz-meaning-hint-btn" type="button" class="btn hint small">Hiển thị</button>
         </div>
         <span id="quiz-meaning-text" class="quiz-meaning-text"></span>
@@ -133,10 +147,12 @@
         <span id="quiz-audio-status" class="quiz-audio-status"></span>
       </div>
       <div class="quiz-inputs">
-        <label>Từ tiếng Anh
+        <label>
+          <span id="quiz-word-label">Từ tiếng Anh</span>
           <input id="quiz-word-input" autocomplete="off" placeholder="Nhập từ ở đây">
         </label>
-        <label>Loại từ
+        <label>
+          <span id="quiz-type-label">Loại từ</span>
           <input id="quiz-type-input" autocomplete="off" placeholder="Danh từ, động từ,..">
         </label>
       </div>

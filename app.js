@@ -59,6 +59,7 @@ const state = {
   isSearchMode: false,
   loading: false,
   practiceMode: 'meaning',
+  typeCheckEnabled: true,
   audioCache: new Map(),
   audioPrefetch: {
     active: false,
@@ -89,6 +90,7 @@ const state = {
     audioPrefetchPromise: null,
     audioPlayCount: 0,
     usedTypeHint: false,
+    typeCheckEnabled: true,
     stream: {
       enabled: false,
       chunkSize: LISTENING_MODE_DEFAULT_CHUNK_SIZE,
@@ -136,11 +138,13 @@ const refs = {
   modalConfirm: document.getElementById('modal-confirm'),
   modalCancel: document.getElementById('modal-cancel'),
   practiceModeSelect: document.getElementById('practice-mode-select'),
+  typeCheckToggle: document.getElementById('type-check-toggle'),
   quizPanel: document.getElementById('quiz-panel'),
   exitQuizBtn: document.getElementById('exit-quiz-btn'),
   quizProgress: document.getElementById('quiz-progress'),
   quizMeaning: document.getElementById('quiz-meaning-text'),
   quizMeaningHintBtn: document.getElementById('quiz-meaning-hint-btn'),
+  quizMeaningLabel: document.getElementById('quiz-meaning-label'),
   quizSubtitle: document.getElementById('quiz-subtitle'),
   quizWordInput: document.getElementById('quiz-word-input'),
   quizTypeInput: document.getElementById('quiz-type-input'),
@@ -151,6 +155,8 @@ const refs = {
   quizTypeHintBtn: document.getElementById('quiz-type-hint-btn'),
   quizLetterHint: document.getElementById('quiz-letter-hint'),
   quizTypeHint: document.getElementById('quiz-type-hint'),
+  quizWordLabel: document.getElementById('quiz-word-label'),
+  quizTypeLabel: document.getElementById('quiz-type-label'),
   quizAudioControls: document.getElementById('quiz-audio-controls'),
   quizAudioBtn: document.getElementById('quiz-audio-btn'),
   quizAudioStatus: document.getElementById('quiz-audio-status'),
@@ -190,6 +196,7 @@ function bindEvents() {
   refs.signOutBtn?.addEventListener('click', handleSignOut);
   refs.startPracticeBtn?.addEventListener('click', handleStartPractice);
   refs.practiceModeSelect?.addEventListener('change', handlePracticeModeChange);
+  refs.typeCheckToggle?.addEventListener('click', handleTypeCheckToggle);
   refs.exitQuizBtn?.addEventListener('click', exitQuizMode);
   refs.quizCheckBtn?.addEventListener('click', checkQuizAnswer);
   refs.quizSkipBtn?.addEventListener('click', skipQuizQuestion);
@@ -258,6 +265,7 @@ function bindEvents() {
 
   handlePracticeModeChange();
   updatePracticeModeControl();
+  updateTypeCheckToggle();
 }
 
 async function subscribeToLists() {
@@ -488,8 +496,33 @@ function updatePracticeAvailability() {
 
 function handlePracticeModeChange() {
   if (!refs.practiceModeSelect) return;
-  const value = refs.practiceModeSelect.value === 'audio' ? 'audio' : 'meaning';
-  state.practiceMode = value;
+  const value = refs.practiceModeSelect.value;
+  const allowedModes = new Set(['meaning', 'audio', 'word']);
+  state.practiceMode = allowedModes.has(value) ? value : 'meaning';
+}
+
+function handleTypeCheckToggle() {
+  state.typeCheckEnabled = !state.typeCheckEnabled;
+  state.quiz.typeCheckEnabled = state.typeCheckEnabled;
+  if (!state.typeCheckEnabled) {
+    state.quiz.usedTypeHint = false;
+    if (refs.quizTypeHint) {
+      refs.quizTypeHint.textContent = '';
+    }
+    if (refs.quizTypeInput) {
+      refs.quizTypeInput.classList.remove('error');
+    }
+  }
+  updateTypeCheckToggle();
+  updateQuizModeUI();
+}
+
+function updateTypeCheckToggle() {
+  const button = refs.typeCheckToggle;
+  if (!button) return;
+  const enabled = Boolean(state.typeCheckEnabled);
+  button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  button.setAttribute('aria-label', `Kiểm tra loại từ: ${enabled ? 'Bật' : 'Tắt'}`);
 }
 
 async function handleSignOut(event) {
@@ -1067,7 +1100,8 @@ function enterQuizMode(items, mode = 'meaning', options = {}) {
   const stream = state.quiz.stream;
   const streamingActive = mode === 'audio' && stream?.enabled;
   state.quiz.active = true;
-  state.quiz.mode = mode === 'audio' ? 'audio' : 'meaning';
+  state.quiz.mode = mode === 'audio' ? 'audio' : mode === 'word' ? 'word' : 'meaning';
+  state.quiz.typeCheckEnabled = Boolean(state.typeCheckEnabled);
   if (streamingActive && options.streamChunk) {
     integrateListeningChunk(options.streamChunk, { replaceQueue: true });
     const totalPlanned =
@@ -1183,6 +1217,7 @@ function resetQuizState() {
     audioPrefetchPromise: null,
     audioPlayCount: 0,
     usedTypeHint: false,
+    typeCheckEnabled: Boolean(state.typeCheckEnabled),
   });
 }
 
@@ -1204,6 +1239,7 @@ function prepareNextQuizQuestion() {
   if (!refs.quizMeaning || !refs.quizWordInput || !refs.quizTypeInput) return;
   const streamingActive = state.quiz.mode === 'audio' && state.quiz.stream?.enabled;
   const stream = state.quiz.stream;
+  state.quiz.typeCheckEnabled = Boolean(state.typeCheckEnabled);
   releaseCurrentAudioUrl();
   const noPendingQuestions = state.quiz.unseen.length === 0 && state.quiz.wrongQueue.length === 0;
   const waitingForChunk =
@@ -1301,8 +1337,10 @@ function prepareNextQuizQuestion() {
 
 function updateMeaningDisplay() {
   if (!refs.quizMeaning || !refs.quizMeaningHintBtn) return;
-  const meaning = state.quiz.current?.meaning || '(Chưa có nghĩa)';
-  if (!state.quiz.current) {
+  const current = state.quiz.current;
+  const meaning = current?.meaning || 'Chưa có nghĩa';
+  const word = current?.word || 'Chưa có từ';
+  if (!current) {
     refs.quizMeaning.textContent = '';
     refs.quizMeaningHintBtn.classList.add('hidden');
     refs.quizMeaningHintBtn.disabled = true;
@@ -1310,6 +1348,10 @@ function updateMeaningDisplay() {
   }
   if (state.quiz.mode === 'meaning') {
     refs.quizMeaning.textContent = meaning;
+    refs.quizMeaningHintBtn.classList.add('hidden');
+    refs.quizMeaningHintBtn.disabled = true;
+  } else if (state.quiz.mode === 'word') {
+    refs.quizMeaning.textContent = word;
     refs.quizMeaningHintBtn.classList.add('hidden');
     refs.quizMeaningHintBtn.disabled = true;
   } else {
@@ -1327,31 +1369,56 @@ function updateMeaningDisplay() {
 }
 
 function updateQuizModeUI() {
-  const isAudioMode = state.quiz.mode === 'audio';
+  const mode = state.quiz.mode;
+  const isAudioMode = mode === 'audio';
+  const typeCheckActive = !isAudioMode && state.quiz.typeCheckEnabled;
+
   const typeLabel = refs.quizTypeInput?.closest('label');
   if (typeLabel) {
-    typeLabel.classList.toggle('hidden', isAudioMode);
+    typeLabel.classList.toggle('hidden', !typeCheckActive);
   }
   if (refs.quizTypeInput) {
-    refs.quizTypeInput.disabled = isAudioMode;
-    if (isAudioMode) {
+    refs.quizTypeInput.disabled = !typeCheckActive;
+    if (!typeCheckActive) {
       refs.quizTypeInput.value = '';
       refs.quizTypeInput.classList.remove('error');
     }
   }
   if (refs.quizTypeHintBtn) {
-    refs.quizTypeHintBtn.classList.toggle('hidden', isAudioMode);
-    refs.quizTypeHintBtn.disabled = isAudioMode;
+    refs.quizTypeHintBtn.classList.toggle('hidden', !typeCheckActive);
+    refs.quizTypeHintBtn.disabled = !typeCheckActive;
     const hintWrapper = refs.quizTypeHintBtn.parentElement;
     if (hintWrapper) {
-      hintWrapper.classList.toggle('hidden', isAudioMode);
+      hintWrapper.classList.toggle('hidden', !typeCheckActive);
     }
   }
   if (refs.quizTypeHint) {
-    refs.quizTypeHint.classList.toggle('hidden', isAudioMode);
-    if (isAudioMode) {
+    refs.quizTypeHint.classList.toggle('hidden', !typeCheckActive);
+    if (!typeCheckActive) {
       refs.quizTypeHint.textContent = '';
     }
+  }
+
+  if (refs.quizWordLabel) {
+    refs.quizWordLabel.textContent = mode === 'word' ? 'Nghĩa tiếng Việt' : 'Từ tiếng Anh';
+  }
+  if (refs.quizWordInput) {
+    refs.quizWordInput.placeholder = mode === 'word' ? 'Nhập nghĩa ở đây' : 'Nhập từ ở đây';
+  }
+  if (refs.quizTypeLabel) {
+    refs.quizTypeLabel.textContent = 'Loại từ';
+  }
+  if (refs.quizMeaningLabel) {
+    refs.quizMeaningLabel.textContent = mode === 'word' ? 'Từ tiếng Anh' : 'Nghĩa tiếng Việt';
+  }
+  if (refs.quizSubtitle) {
+    let subtitle = 'Nhập đúng từ tiếng Anh và loại từ tương ứng.';
+    if (mode === 'word') {
+      subtitle = 'Nhập đúng nghĩa tiếng Việt và loại từ tương ứng.';
+    } else if (mode === 'audio') {
+      subtitle = 'Nghe và nhập đúng từ tiếng Anh cùng loại từ.';
+    }
+    refs.quizSubtitle.textContent = subtitle;
   }
 }
 
@@ -2019,21 +2086,24 @@ function playQuizAudio() {
 
 function checkQuizAnswer() {
   if (!state.quiz.active || !state.quiz.current) return;
-  const userWord = refs.quizWordInput.value.trim().toLowerCase();
+  const userAnswer = refs.quizWordInput.value.trim().toLowerCase();
   const userType = refs.quizTypeInput.value.trim().toLowerCase();
-  const correctWord = (state.quiz.current.word || '').trim().toLowerCase();
+  const correctAnswer =
+    state.quiz.mode === 'word'
+      ? (state.quiz.current.meaning || '').trim().toLowerCase()
+      : (state.quiz.current.word || '').trim().toLowerCase();
   const correctType = (state.quiz.current.type || '').trim().toLowerCase();
 
   refs.quizWordInput.classList.remove('error');
   refs.quizTypeInput.classList.remove('error');
 
-  const requiresType = state.quiz.mode !== 'audio';
-  const wordMatches = userWord === correctWord;
+  const requiresType = state.quiz.mode !== 'audio' && state.quiz.typeCheckEnabled;
+  const answerMatches = userAnswer === correctAnswer;
   const typeMatches = !requiresType || userType === correctType;
 
-  if (wordMatches && typeMatches) {
-    const meaningPenalty = state.quiz.mode === 'audio' ? false : state.quiz.usedMeaningHint;
-    const typeHintPenalty = state.quiz.mode === 'meaning' ? state.quiz.usedTypeHint : false;
+  if (answerMatches && typeMatches) {
+    const meaningPenalty = state.quiz.mode === 'audio' ? state.quiz.usedMeaningHint : false;
+    const typeHintPenalty = requiresType ? state.quiz.usedTypeHint : false;
     const usedHints = state.quiz.hintIndex > 0 || meaningPenalty || typeHintPenalty;
     const revisit = state.quiz.attempts > 0 || usedHints;
     if (state.quiz.stream.enabled) {
@@ -2054,7 +2124,7 @@ function checkQuizAnswer() {
     updateQuizProgress();
     prepareNextQuizQuestion();
   } else {
-    if (!wordMatches) {
+    if (!answerMatches) {
       refs.quizWordInput.classList.add('error');
     }
     if (!typeMatches && requiresType) {
@@ -2077,7 +2147,9 @@ function skipQuizQuestion() {
 
 function showQuizWordHint() {
   if (!state.quiz.active || !state.quiz.current) return;
-  const answer = (state.quiz.current.word || '').toLowerCase();
+  const answerSource =
+    state.quiz.mode === 'word' ? state.quiz.current.meaning || '' : state.quiz.current.word || '';
+  const answer = answerSource.trim().toLowerCase();
   if (state.quiz.hintIndex < answer.length) {
     state.quiz.hintIndex += 1;
   }
@@ -2086,7 +2158,7 @@ function showQuizWordHint() {
 
 function showQuizTypeHint() {
   if (!state.quiz.active || !state.quiz.current) return;
-  if (state.quiz.mode === 'audio') return;
+  if (state.quiz.mode === 'audio' || !state.quiz.typeCheckEnabled) return;
   state.quiz.usedTypeHint = true;
   refs.quizTypeHint.textContent = state.quiz.current.type || '';
 }
