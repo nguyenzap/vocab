@@ -1,4 +1,4 @@
-import { db } from './firebase-config.js';
+﻿import { db } from './firebase-config.js';
 import { requireAuth, signOutUser } from './auth.js';
 import {
   collection,
@@ -207,7 +207,7 @@ function bindEvents() {
       state.quiz.useSpeechFallback = true;
       state.quiz.audioError = false;
       state.quiz.audioPlayCount = 0;
-      updateQuizAudioStatus('Báº¥m Ä‘á»ƒ nghe');
+      updateQuizAudioStatus('Bấm để nghe lại');
     } else {
       state.quiz.useSpeechFallback = false;
       state.quiz.audioError = true;
@@ -506,7 +506,7 @@ async function selectList(listId) {
   if (state.selectedListId === listId) return;
   state.selectedListId = listId;
   const list = state.lists.find((item) => item.id === listId);
-  state.selectedListName = list?.name ?? 'ChÆ°a Ä‘áº·t tÃªn';
+  state.selectedListName = list?.name ?? 'Chưa đặt tên';
   refs.listTitle.textContent = state.selectedListName;
   renderLists();
   toggleListControls(true);
@@ -804,14 +804,14 @@ async function startListeningPractice() {
       updatePracticeAvailability();
       return;
     }
-    const randomizedItems = shuffleArray(allItems).map((item) => ({ ...item }));
+    const shuffledItems = shuffleArray(allItems);
     resetQuizState();
     state.quiz.stream.enabled = true;
     state.quiz.stream.chunkSize = LISTENING_MODE_DEFAULT_CHUNK_SIZE;
     state.quiz.stream.prefetchRatio = LISTENING_MODE_PREFETCH_RATIO;
-    state.quiz.stream.sourceItems = randomizedItems;
+    state.quiz.stream.sourceItems = shuffledItems;
     state.quiz.stream.cursorIndex = 0;
-    state.quiz.stream.exhausted = randomizedItems.length === 0;
+    state.quiz.stream.exhausted = shuffledItems.length === 0;
     const chunk = await loadNextListeningChunk({ resetCursor: true });
     if (!chunk.items.length) {
       state.quiz.stream.enabled = false;
@@ -821,7 +821,7 @@ async function startListeningPractice() {
     }
     enterQuizMode(chunk.items, 'audio', {
       streamChunk: chunk,
-      totalFromStream: randomizedItems.length,
+      totalFromStream: shuffledItems.length,
     });
   } catch (error) {
     state.quiz.stream.enabled = false;
@@ -1015,11 +1015,10 @@ function triggerListeningChunkFetch() {
       }
       integrateListeningChunk(chunk, { replaceQueue: false });
       startChunkAudioPrefetch(chunk);
-      state.quiz.total = Math.max(
-        state.quiz.total,
-        state.quiz.items.length,
-        state.totalCount || 0
-      );
+      const totalPlanned = Array.isArray(stream.sourceItems)
+        ? stream.sourceItems.length
+        : state.quiz.total;
+      state.quiz.total = totalPlanned || state.quiz.total;
       updateQuizProgress();
       if (!state.quiz.current && state.quiz.active) {
         setTimeout(() => prepareNextQuizQuestion(), 0);
@@ -1069,13 +1068,13 @@ function enterQuizMode(items, mode = 'meaning', options = {}) {
   state.quiz.mode = mode === 'audio' ? 'audio' : 'meaning';
   if (streamingActive && options.streamChunk) {
     integrateListeningChunk(options.streamChunk, { replaceQueue: true });
-    const inferredTotal =
-      typeof options.totalFromStream === 'number' && options.totalFromStream > 0
+    const totalPlanned =
+      Array.isArray(stream.sourceItems) && stream.sourceItems.length
+        ? stream.sourceItems.length
+        : typeof options.totalFromStream === 'number' && options.totalFromStream > 0
         ? options.totalFromStream
-        : state.totalCount > 0
-        ? state.totalCount
         : state.quiz.items.length;
-    state.quiz.total = inferredTotal;
+    state.quiz.total = totalPlanned;
     state.quiz.audioPrefetchPromise = startChunkAudioPrefetch(options.streamChunk) || null;
   } else {
     state.quiz.items = providedItems;
@@ -1829,70 +1828,6 @@ function cancelAudioPrefetch() {
   showToast('Đã hủy việc tải audio trước khi luyện tập.', 'info');
 }
 
-async function prepareAudioPractice(items) {
-  const uniqueWords = Array.from(
-    new Set(
-      (Array.isArray(items) ? items : [])
-        .map((item) => getAudioCacheKey(item?.word))
-        .filter(Boolean)
-    )
-  );
-  if (!uniqueWords.length) {
-    state.audioPrefetch.cancelled = false;
-    state.audioPrefetch.active = false;
-    state.audioPrefetch.total = 0;
-    state.audioPrefetch.completed = 0;
-    return true;
-  }
-  const pendingWords = uniqueWords.filter((word) => {
-    const entry = peekAudioCacheEntry(word);
-    return !entry || entry.status !== 'ready';
-  });
-  const total = uniqueWords.length;
-  const alreadyReady = total - pendingWords.length;
-  if (!pendingWords.length) {
-    state.audioPrefetch.cancelled = false;
-    state.audioPrefetch.total = total;
-    state.audioPrefetch.completed = total;
-    state.audioPrefetch.active = false;
-    return true;
-  }
-  showAudioPrefetchOverlay(total, alreadyReady);
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  let wasCancelled = false;
-  try {
-    await prefetchAudioForWords(pendingWords, {
-      total,
-      initialCompleted: alreadyReady,
-      allowDictionary: true,
-      allowPuter: false,
-      shouldContinue: () => !state.audioPrefetch.cancelled,
-      onProgress: (completed, totalCount) => {
-        state.audioPrefetch.completed = completed;
-        updateAudioPrefetchOverlay(completed, totalCount);
-      },
-    });
-  } finally {
-    wasCancelled = state.audioPrefetch.cancelled;
-    hideAudioPrefetchOverlay();
-    state.audioPrefetch.cancelled = false;
-  }
-  if (wasCancelled) {
-    return false;
-  }
-  const missing = pendingWords.filter((word) => {
-    const entry = peekAudioCacheEntry(word);
-    return !entry || entry.status !== 'ready';
-  });
-  if (missing.length) {
-    showToast(
-      `Không tìm thấy audio từ điển cho ${missing.length} từ. Sẽ tạo giọng nói bổ sung trong quá trình luyện tập.`,
-      'info'
-    );
-  }
-  return true;
-}
-
 async function loadAudioForCurrentWord(word) {
   const normalized = getAudioCacheKey(word);
   releaseCurrentAudioUrl();
@@ -2362,7 +2297,7 @@ async function handleBulkAdd() {
       refs.bulkFeedback.textContent = errors.join('\n');
     }
     if (!entries.length) {
-      showToast('Không có dòng hợp lệ nào được thêm.', 'info');
+      showToast('Không có đồng hợp lệ nào được thêm.', 'info');
       return;
     }
     await upsertBulkVocabs(db, state.user.uid, state.selectedListId, entries);
