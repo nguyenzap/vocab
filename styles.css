@@ -949,3 +949,8 @@ input.error {
     align-items: flex-start;
   }
 }
+
+.list-actions {
+  gap: 0.5rem;
+  justify-items: space-between;
+}

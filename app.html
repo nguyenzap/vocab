@@ -40,17 +40,24 @@
     </aside>
     <section class="content-panel">
       <div class="panel-header">
+        <div>
         <h2 id="current-list-name">Chọn một danh sách</h2>
+          <div style = "display: flex; gap: 0.5rem; margin-top: 5px;">
+            <button id="rename-list-btn" class="btn secondary small" disabled style = "margin-right: 10px,">Đổi tên</button >
+            <button id="delete-list-btn" class="btn danger small" disabled>Xóa</button>
+          </div>
+        </div>
         <div class="list-actions">
-          <button id="rename-list-btn" class="btn secondary small" disabled>Đổi tên</button>
-          <button id="delete-list-btn" class="btn danger small" disabled>Xóa</button>
-          <div class="practice-mode">
+          <div class="practice-mode" style = "margin: 5px">
             <label for="practice-mode-select">Chế độ</label>
             <select id="practice-mode-select" class="practice-mode-select" disabled>
               <option value="meaning">Kiểm Tra Nghĩa</option>
               <option value="word">Kiểm Tra Từ</option>
               <option value="audio">Nghe Từ</option>
             </select>
+          </div>
+          <div style = "display: flex;   justify-items: space-between; align-items: center; gap: 0.5rem; margin: 5px;">
+          <label for="type-check-toggle" class="type-check-label">Kiểm tra loại từ</label>
             <button
               id="type-check-toggle"
               class="toggle-switch"
@@ -65,8 +72,10 @@
               </span>
             </button>
           </div>
-          <button id="start-practice-btn" class="btn primary small" disabled>Bắt đầu luyện tập</button>
-          <button id="export-list-btn" class="btn secondary small" disabled>Xuất JSONL</button>
+          <div>
+            <button id="start-practice-btn" class="btn primary small" disabled>Bắt đầu luyện tập</button>
+            <button id="export-list-btn" class="btn secondary small" disabled>Xuất JSONL</button>
+          </div>
         </div>
       </div>
       <section class="controls">
