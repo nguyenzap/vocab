@@ -26,6 +26,19 @@ import {
   confirmAction,
 } from './utils.js';
 
+const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
+const LISTENING_MODE_PREFETCH_RATIO = 0.5;
+const AUDIO_CACHE_LIMIT = 150;
+const PUTER_TTS_OPTIONS = Object.freeze({
+  language: 'en-GB',
+  voice: 'Amy',
+  engine: 'generative',
+});
+const PUTER_TTS_FALLBACK_ENGINE = 'neural';
+const PUTER_TTS_MAX_RETRIES = 3;
+const PUTER_TTS_TIMEOUT_MS = 15000;
+const QUIZ_AUDIO_GAIN = 2;
+
 const state = {
   user: null,
   lists: [],
@@ -75,6 +88,21 @@ const state = {
     useSpeechFallback: false,
     audioPrefetchPromise: null,
     audioPlayCount: 0,
+    stream: {
+      enabled: false,
+      chunkSize: LISTENING_MODE_DEFAULT_CHUNK_SIZE,
+      prefetchRatio: LISTENING_MODE_PREFETCH_RATIO,
+      sourceItems: [],
+      cursorIndex: 0,
+      exhausted: false,
+      fetching: false,
+      nextChunkPromise: null,
+      chunkCounter: 0,
+      activeChunkId: null,
+      chunkOrder: [],
+      chunkMeta: new Map(),
+      completedCount: 0,
+    },
   },
 };
 
@@ -179,7 +207,7 @@ function bindEvents() {
       state.quiz.useSpeechFallback = true;
       state.quiz.audioError = false;
       state.quiz.audioPlayCount = 0;
-      updateQuizAudioStatus('Bấm để nghe');
+      updateQuizAudioStatus('Báº¥m Ä‘á»ƒ nghe');
     } else {
       state.quiz.useSpeechFallback = false;
       state.quiz.audioError = true;
@@ -478,7 +506,7 @@ async function selectList(listId) {
   if (state.selectedListId === listId) return;
   state.selectedListId = listId;
   const list = state.lists.find((item) => item.id === listId);
-  state.selectedListName = list?.name ?? 'Chưa đặt tên';
+  state.selectedListName = list?.name ?? 'ChÆ°a Ä‘áº·t tÃªn';
   refs.listTitle.textContent = state.selectedListName;
   renderLists();
   toggleListControls(true);
@@ -725,7 +753,7 @@ async function handleExportList() {
     downloadTextFile(filename, lines.join('\n'));
     showToast('Đã tạo file JSONL.', 'success');
   } catch (error) {
-    showToast(parseFirebaseError(error, 'Không thể xuất danh sách'), 'error');
+    showToast(parseFirebaseError(error, 'Không thấy danh sách nào'), 'error');
   }
 }
 
@@ -735,27 +763,294 @@ async function handleStartPractice() {
     return;
   }
   try {
+    if (state.practiceMode === 'audio') {
+      await startListeningPractice();
+      return;
+    }
     const items = await fetchAllVocabs();
     if (!items.length) {
       showToast('Danh sách chưa có từ nào để luyện tập.', 'info');
       updatePracticeAvailability();
       return;
     }
-    if (state.practiceMode === 'audio') {
-      const ready = await prepareAudioPractice(items);
-      if (!ready) {
-        return;
-      }
-    }
+    resetQuizState();
     enterQuizMode(items, state.practiceMode);
   } catch (error) {
-    showToast(parseFirebaseError(error, 'Không thể tải dữ liệu luyện tập'), 'error');
+    showToast(parseFirebaseError(error, 'Không thể bắt đầu luyện tập'), 'error');
   } finally {
     updatePracticeAvailability();
   }
 }
 
-function enterQuizMode(items, mode = 'meaning') {
+async function startListeningPractice() {
+  let overlayVisible = false;
+  const cancelButton = refs.audioPrefetchCancelBtn ?? null;
+  const previousCancelDisabled = cancelButton ? cancelButton.disabled : null;
+  try {
+    showAudioPrefetchOverlay(0, 0);
+    overlayVisible = true;
+    if (cancelButton) {
+      cancelButton.disabled = true;
+    }
+    if (refs.audioPrefetchStatus) {
+      refs.audioPrefetchStatus.textContent = 'Đang chuẩn bị bộ từ đầu tiên...';
+    }
+    if (refs.audioPrefetchProgressBar) {
+      refs.audioPrefetchProgressBar.style.width = '0%';
+    }
+    const allItems = await fetchAllVocabs();
+    if (!allItems.length) {
+      showToast('Danh sách chưa có từ nào để luyện tập.', 'info');
+      updatePracticeAvailability();
+      return;
+    }
+    const randomizedItems = shuffleArray(allItems).map((item) => ({ ...item }));
+    resetQuizState();
+    state.quiz.stream.enabled = true;
+    state.quiz.stream.chunkSize = LISTENING_MODE_DEFAULT_CHUNK_SIZE;
+    state.quiz.stream.prefetchRatio = LISTENING_MODE_PREFETCH_RATIO;
+    state.quiz.stream.sourceItems = randomizedItems;
+    state.quiz.stream.cursorIndex = 0;
+    state.quiz.stream.exhausted = randomizedItems.length === 0;
+    const chunk = await loadNextListeningChunk({ resetCursor: true });
+    if (!chunk.items.length) {
+      state.quiz.stream.enabled = false;
+      showToast('Danh sách chưa có từ nào để luyện tập.', 'info');
+      updatePracticeAvailability();
+      return;
+    }
+    enterQuizMode(chunk.items, 'audio', {
+      streamChunk: chunk,
+      totalFromStream: randomizedItems.length,
+    });
+  } catch (error) {
+    state.quiz.stream.enabled = false;
+    showToast(parseFirebaseError(error, 'Không thể khởi động chế độ nghe'), 'error');
+  } finally {
+    if (cancelButton && previousCancelDisabled !== null) {
+      cancelButton.disabled = previousCancelDisabled;
+    }
+    if (overlayVisible) {
+      hideAudioPrefetchOverlay();
+    }
+  }
+}
+
+async function loadNextListeningChunk(options = {}) {
+  const { resetCursor = false } = options || {};
+  const stream = state.quiz.stream;
+  if (!stream.enabled) {
+    return { id: null, items: [], exhausted: true };
+  }
+  if (resetCursor) {
+    stream.cursorIndex = 0;
+    stream.exhausted = false;
+    stream.chunkOrder = [];
+    stream.chunkMeta = new Map();
+    stream.activeChunkId = null;
+    stream.chunkCounter = 0;
+    stream.completedCount = 0;
+  }
+  if (stream.exhausted && !resetCursor) {
+    return { id: null, items: [], exhausted: true };
+  }
+  if (stream.fetching && stream.nextChunkPromise && !resetCursor) {
+    return stream.nextChunkPromise;
+  }
+  const promise = (async () => {
+    stream.fetching = true;
+    try {
+      const source = Array.isArray(stream.sourceItems) ? stream.sourceItems : [];
+      if (stream.cursorIndex >= source.length) {
+        stream.exhausted = true;
+        return {
+          id: null,
+          items: [],
+          exhausted: true,
+        };
+      }
+      const size = Math.max(1, stream.chunkSize || LISTENING_MODE_DEFAULT_CHUNK_SIZE);
+      const slice = source.slice(stream.cursorIndex, stream.cursorIndex + size);
+      stream.cursorIndex += slice.length;
+      if (stream.cursorIndex >= source.length) {
+        stream.exhausted = true;
+      }
+      stream.chunkCounter += 1;
+      const chunkId = `chunk-${stream.chunkCounter}`;
+      const annotated = slice.map((item) => ({
+        ...item,
+        __chunkId: chunkId,
+      }));
+      return {
+        id: chunkId,
+        items: annotated,
+        exhausted: stream.exhausted,
+      };
+    } finally {
+      stream.fetching = false;
+      stream.nextChunkPromise = null;
+    }
+  })();
+  stream.nextChunkPromise = promise;
+  return promise;
+}
+
+function integrateListeningChunk(chunk, options = {}) {
+  if (!chunk || !Array.isArray(chunk.items) || !chunk.items.length) return;
+  const stream = state.quiz.stream;
+  const replaceQueue = Boolean(options.replaceQueue);
+  if (!stream.chunkMeta) {
+    stream.chunkMeta = new Map();
+  }
+  if (!stream.chunkMeta.has(chunk.id)) {
+    stream.chunkMeta.set(chunk.id, {
+      total: chunk.items.length,
+      completed: 0,
+      prefetchTriggered: false,
+      audioPrefetchPromise: null,
+      audioReady: false,
+    });
+    stream.chunkOrder.push(chunk.id);
+  }
+  if (!stream.activeChunkId) {
+    stream.activeChunkId = chunk.id;
+  }
+  if (replaceQueue) {
+    state.quiz.items = [...chunk.items];
+    state.quiz.unseen = [...chunk.items];
+  } else {
+    state.quiz.items = [...state.quiz.items, ...chunk.items];
+    state.quiz.unseen.push(...chunk.items);
+  }
+}
+
+function startChunkAudioPrefetch(chunk) {
+  if (!chunk || !Array.isArray(chunk.items) || !chunk.items.length) return null;
+  const stream = state.quiz.stream;
+  if (!stream.enabled) return null;
+  const meta = stream.chunkMeta?.get(chunk.id);
+  if (!meta) return null;
+  if (meta.audioReady) return null;
+  if (meta.audioPrefetchPromise) {
+    return meta.audioPrefetchPromise;
+  }
+  const words = chunk.items
+    .map((item) => (item?.word || '').trim())
+    .filter(Boolean);
+  if (!words.length) return null;
+  const promise = prefetchAudioForWords(words, {
+    allowDictionary: false,
+    allowPuter: true,
+    concurrency: Math.min(AUDIO_PREFETCH_CONCURRENCY, words.length),
+    shouldContinue: () =>
+      state.quiz.active && state.quiz.mode === 'audio' && state.quiz.stream.enabled,
+  }).catch((error) => {
+    console.warn('Audio prefetch failed for chunk', chunk.id, error);
+  }).finally(() => {
+    if (!state.quiz.stream.enabled) return;
+    const latestMeta = state.quiz.stream.chunkMeta?.get(chunk.id);
+    if (!latestMeta) return;
+    if (latestMeta.audioPrefetchPromise === promise) {
+      latestMeta.audioPrefetchPromise = null;
+    }
+    if (!latestMeta.audioReady) {
+      latestMeta.audioReady = true;
+    }
+    if (state.quiz.audioPrefetchPromise === promise) {
+      state.quiz.audioPrefetchPromise = null;
+    }
+  });
+  meta.audioPrefetchPromise = promise;
+  return promise;
+}
+
+function handleStreamingItemCompletion(item, options = {}) {
+  if (!item || !state.quiz.stream.enabled) return;
+  if (item.__chunkCompleted) return;
+  const stream = state.quiz.stream;
+  const revisit = Boolean(options.revisit);
+  if (revisit) return;
+  const chunkId = item.__chunkId;
+  if (!chunkId) return;
+  const meta = stream.chunkMeta?.get(chunkId);
+  if (!meta) return;
+  item.__chunkCompleted = true;
+  meta.completed += 1;
+  stream.completedCount += 1;
+  if (stream.activeChunkId === chunkId) {
+    maybeTriggerNextListeningChunk(chunkId, meta);
+  }
+  if (meta.completed >= meta.total) {
+    advanceActiveListeningChunk(chunkId);
+  }
+}
+
+function maybeTriggerNextListeningChunk(chunkId, meta) {
+  const stream = state.quiz.stream;
+  if (!stream.enabled || stream.exhausted) return;
+  if (!meta || meta.prefetchTriggered) return;
+  if (stream.nextChunkPromise) return;
+  const ratio = meta.total > 0 ? meta.completed / meta.total : 1;
+  if (ratio < stream.prefetchRatio) return;
+  meta.prefetchTriggered = true;
+  triggerListeningChunkFetch();
+}
+
+function triggerListeningChunkFetch() {
+  const stream = state.quiz.stream;
+  if (!stream.enabled || stream.exhausted) return null;
+  const alreadyPending = Boolean(stream.nextChunkPromise);
+  const pending = loadNextListeningChunk();
+  if (alreadyPending) {
+    return pending;
+  }
+  pending
+    .then((chunk) => {
+      if (!state.quiz.active || !stream.enabled) return;
+      if (!chunk || !Array.isArray(chunk.items) || !chunk.items.length) {
+        if (chunk && chunk.exhausted) {
+          stream.exhausted = true;
+        }
+        return;
+      }
+      integrateListeningChunk(chunk, { replaceQueue: false });
+      startChunkAudioPrefetch(chunk);
+      state.quiz.total = Math.max(
+        state.quiz.total,
+        state.quiz.items.length,
+        state.totalCount || 0
+      );
+      updateQuizProgress();
+      if (!state.quiz.current && state.quiz.active) {
+        setTimeout(() => prepareNextQuizQuestion(), 0);
+      }
+    })
+    .catch((error) => {
+      if (!state.quiz.active || !stream.enabled) return;
+      console.warn('Failed to fetch next listening chunk', error);
+      if (stream.activeChunkId && stream.chunkMeta?.has(stream.activeChunkId)) {
+        const activeMeta = stream.chunkMeta.get(stream.activeChunkId);
+        if (activeMeta && !stream.exhausted) {
+          activeMeta.prefetchTriggered = false;
+        }
+      }
+    });
+  return pending;
+}
+
+function advanceActiveListeningChunk(completedChunkId) {
+  const stream = state.quiz.stream;
+  const index = stream.chunkOrder.indexOf(completedChunkId);
+  if (index !== -1) {
+    stream.chunkOrder.splice(index, 1);
+  }
+  if (stream.chunkMeta?.has(completedChunkId)) {
+    stream.chunkMeta.delete(completedChunkId);
+  }
+  stream.activeChunkId = stream.chunkOrder.length ? stream.chunkOrder[0] : null;
+}
+
+function enterQuizMode(items, mode = 'meaning', options = {}) {
   if (
     !refs.quizPanel ||
     !refs.quizWordInput ||
@@ -767,13 +1062,27 @@ function enterQuizMode(items, mode = 'meaning') {
     updatePracticeAvailability();
     return;
   }
-  resetQuizState();
+  const providedItems = Array.isArray(items) ? items : [];
+  const stream = state.quiz.stream;
+  const streamingActive = mode === 'audio' && stream?.enabled;
   state.quiz.active = true;
-  state.quiz.items = items;
-  state.quiz.unseen = shuffleArray([...items]);
-  state.quiz.total = items.length;
   state.quiz.mode = mode === 'audio' ? 'audio' : 'meaning';
-  if (state.quiz.mode === 'audio') {
+  if (streamingActive && options.streamChunk) {
+    integrateListeningChunk(options.streamChunk, { replaceQueue: true });
+    const inferredTotal =
+      typeof options.totalFromStream === 'number' && options.totalFromStream > 0
+        ? options.totalFromStream
+        : state.totalCount > 0
+        ? state.totalCount
+        : state.quiz.items.length;
+    state.quiz.total = inferredTotal;
+    state.quiz.audioPrefetchPromise = startChunkAudioPrefetch(options.streamChunk) || null;
+  } else {
+    state.quiz.items = providedItems;
+    state.quiz.unseen = shuffleArray([...providedItems]);
+    state.quiz.total = providedItems.length;
+  }
+  if (state.quiz.mode === 'audio' && !streamingActive) {
     const wordsToPrefetch = items.map((item) => item?.word || '');
     state.quiz.audioPrefetchPromise = prefetchAudioForWords(wordsToPrefetch, {
       allowDictionary: false,
@@ -787,7 +1096,7 @@ function enterQuizMode(items, mode = 'meaning') {
       .finally(() => {
         state.quiz.audioPrefetchPromise = null;
       });
-  } else {
+  } else if (!streamingActive) {
     state.quiz.audioPrefetchPromise = null;
   }
   if (refs.startPracticeBtn) {
@@ -839,6 +1148,19 @@ function releaseCurrentAudioUrl() {
 
 function resetQuizState() {
   releaseCurrentAudioUrl();
+  state.quiz.stream.enabled = false;
+  state.quiz.stream.chunkSize = LISTENING_MODE_DEFAULT_CHUNK_SIZE;
+  state.quiz.stream.prefetchRatio = LISTENING_MODE_PREFETCH_RATIO;
+  state.quiz.stream.sourceItems = [];
+  state.quiz.stream.cursorIndex = 0;
+  state.quiz.stream.exhausted = false;
+  state.quiz.stream.fetching = false;
+  state.quiz.stream.nextChunkPromise = null;
+  state.quiz.stream.chunkCounter = 0;
+  state.quiz.stream.activeChunkId = null;
+  state.quiz.stream.chunkOrder = [];
+  state.quiz.stream.chunkMeta = new Map();
+  state.quiz.stream.completedCount = 0;
   Object.assign(state.quiz, {
     active: false,
     items: [],
@@ -864,21 +1186,68 @@ function resetQuizState() {
 
 function updateQuizProgress() {
   if (!refs.quizProgress) return;
-  const remaining = state.quiz.unseen.length + state.quiz.wrongQueue.length;
+  let remaining = state.quiz.unseen.length + state.quiz.wrongQueue.length;
+  if (state.quiz.stream.enabled) {
+    const totalPlanned = state.quiz.total || 0;
+    const outstanding = totalPlanned
+      ? Math.max(totalPlanned - state.quiz.stream.completedCount, 0)
+      : remaining;
+    remaining = Math.max(remaining, outstanding);
+  }
   refs.quizProgress.textContent = `Đúng: ${state.quiz.score}/${state.quiz.total} - Còn lại: ${remaining}`;
 }
 
 function prepareNextQuizQuestion() {
   if (!state.quiz.active) return;
   if (!refs.quizMeaning || !refs.quizWordInput || !refs.quizTypeInput) return;
-  if (state.quiz.unseen.length === 0 && state.quiz.wrongQueue.length === 0) {
+  const streamingActive = state.quiz.mode === 'audio' && state.quiz.stream?.enabled;
+  const stream = state.quiz.stream;
+  releaseCurrentAudioUrl();
+  const noPendingQuestions = state.quiz.unseen.length === 0 && state.quiz.wrongQueue.length === 0;
+  const waitingForChunk =
+    streamingActive &&
+    (!stream.exhausted || Boolean(stream.nextChunkPromise) || stream.fetching);
+  if (noPendingQuestions && waitingForChunk) {
+    triggerListeningChunkFetch();
+    state.quiz.current = null;
+    state.quiz.audioUrl = '';
+    state.quiz.audioObjectUrl = '';
+    state.quiz.audioPlayCount = 0;
+    state.quiz.audioLoading = true;
+    state.quiz.audioError = false;
+    state.quiz.useSpeechFallback = false;
+    if (refs.quizWordInput) {
+      refs.quizWordInput.value = '';
+      refs.quizWordInput.disabled = true;
+      refs.quizWordInput.classList.remove('error');
+    }
+    if (refs.quizTypeInput) {
+      refs.quizTypeInput.value = '';
+      refs.quizTypeInput.disabled = true;
+      refs.quizTypeInput.classList.remove('error');
+    }
+    if (refs.quizFeedback) {
+      refs.quizFeedback.textContent = '';
+      refs.quizFeedback.style.color = 'var(--muted)';
+    }
+    if (refs.quizLetterHint) refs.quizLetterHint.textContent = '';
+    if (refs.quizTypeHint) refs.quizTypeHint.textContent = '';
+    updateQuizAudioStatus('Đang tải bộ từ tiếp theo...');
+    updateQuizAudioControls();
+    updateQuizProgress();
+    return;
+  }
+  if (noPendingQuestions) {
     endQuizSession();
     return;
   }
-  releaseCurrentAudioUrl();
   if (state.quiz.unseen.length > 0) {
-    const randomIndex = Math.floor(Math.random() * state.quiz.unseen.length);
-    state.quiz.current = state.quiz.unseen.splice(randomIndex, 1)[0];
+    if (streamingActive) {
+      state.quiz.current = state.quiz.unseen.shift();
+    } else {
+      const randomIndex = Math.floor(Math.random() * state.quiz.unseen.length);
+      state.quiz.current = state.quiz.unseen.splice(randomIndex, 1)[0];
+    }
   } else {
     state.quiz.current = state.quiz.wrongQueue.shift();
   }
@@ -1023,6 +1392,154 @@ function updateQuizAudioControls() {
   refs.quizAudioBtn.disabled = true;
   updateQuizAudioStatus('Không có audio');
 }
+function getAudioCacheEntry(key) {
+  if (!key) return null;
+  if (!state.audioCache.has(key)) return null;
+  const entry = state.audioCache.get(key);
+  state.audioCache.delete(key);
+  state.audioCache.set(key, entry);
+  return entry;
+}
+
+function peekAudioCacheEntry(key) {
+  if (!key) return null;
+  return state.audioCache.get(key) || null;
+}
+
+function setAudioCacheEntry(key, entry) {
+  if (!key) return entry;
+  if (state.audioCache.has(key)) {
+    state.audioCache.delete(key);
+  }
+  state.audioCache.set(key, entry);
+  enforceAudioCacheLimit();
+  return entry;
+}
+
+function deleteAudioCacheEntry(key) {
+  if (!key) return;
+  state.audioCache.delete(key);
+}
+
+function enforceAudioCacheLimit() {
+  if (!AUDIO_CACHE_LIMIT || AUDIO_CACHE_LIMIT <= 0) return;
+  while (state.audioCache.size > AUDIO_CACHE_LIMIT) {
+    const oldestKey = state.audioCache.keys().next().value;
+    if (!oldestKey) break;
+    state.audioCache.delete(oldestKey);
+  }
+}
+
+function withTimeout(promise, timeoutMs, label = 'TIMEOUT') {
+  if (!promise || typeof promise.then !== 'function') {
+    return Promise.resolve(promise);
+  }
+  if (!timeoutMs || timeoutMs <= 0) {
+    return promise;
+  }
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      const timeoutError = new Error(label || 'TIMEOUT');
+      timeoutError.code = 'TIMEOUT';
+      reject(timeoutError);
+    }, timeoutMs);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
+}
+
+let puterAiClient = null;
+let puterAiClientPromise = null;
+const quizAudioBoost = {
+  context: null,
+  sourceNode: null,
+  gainNode: null,
+};
+
+async function resolvePuterAi() {
+  if (puterAiClient) return puterAiClient;
+  if (typeof window === 'undefined') return null;
+  if (!puterAiClientPromise) {
+    puterAiClientPromise = (async () => {
+      const deadline = Date.now() + Math.max(PUTER_TTS_TIMEOUT_MS, 5000);
+      const pollInterval = 200;
+      while (Date.now() < deadline) {
+        const sdk = window.puter || window.Puter || null;
+        const ai = sdk?.ai || null;
+        if (ai) {
+          try {
+            if (typeof sdk.ready === 'function') {
+              await sdk.ready();
+            } else if (sdk.ready && typeof sdk.ready.then === 'function') {
+              await sdk.ready;
+            }
+          } catch (error) {
+            console.warn('Puter SDK ready() failed', error);
+          }
+          return ai;
+        }
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      }
+      return null;
+    })().catch((error) => {
+      console.warn('Unable to resolve Puter SDK', error);
+      return null;
+    }).finally(() => {
+      if (!puterAiClient) {
+        puterAiClientPromise = null;
+      }
+    });
+  }
+  puterAiClient = await puterAiClientPromise;
+  if (!puterAiClient) {
+    puterAiClientPromise = null;
+  }
+  return puterAiClient;
+}
+
+function ensureQuizAudioBoost() {
+  if (!refs.quizAudioPlayer) return null;
+  if (typeof window === 'undefined') return null;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!quizAudioBoost.context) {
+    try {
+      quizAudioBoost.context = new AudioCtx();
+    } catch (error) {
+      console.warn('Unable to create AudioContext for quiz audio', error);
+      return null;
+    }
+  }
+  if (!quizAudioBoost.sourceNode) {
+    try {
+      quizAudioBoost.sourceNode = quizAudioBoost.context.createMediaElementSource(
+        refs.quizAudioPlayer
+      );
+    } catch (error) {
+      if (error?.name === 'InvalidStateError' || /already been used/i.test(error?.message || '')) {
+        return quizAudioBoost.context;
+      }
+      console.warn('Unable to attach quiz audio player to AudioContext', error);
+      return quizAudioBoost.context;
+    }
+  }
+  if (!quizAudioBoost.gainNode) {
+    quizAudioBoost.gainNode = quizAudioBoost.context.createGain();
+    quizAudioBoost.gainNode.gain.value = QUIZ_AUDIO_GAIN;
+    quizAudioBoost.sourceNode.connect(quizAudioBoost.gainNode);
+    quizAudioBoost.gainNode.connect(quizAudioBoost.context.destination);
+  } else {
+    quizAudioBoost.gainNode.gain.value = QUIZ_AUDIO_GAIN;
+  }
+  return quizAudioBoost.context;
+}
 
 function getAudioCacheKey(word) {
   return (word || '').trim().toLowerCase();
@@ -1032,7 +1549,7 @@ async function ensureAudioEntry(word, options = {}) {
   const key = getAudioCacheKey(word);
   if (!key) return null;
   const force = Boolean(options.force);
-  const existing = state.audioCache.get(key);
+  const existing = getAudioCacheEntry(key);
   const allowDictionary =
     typeof options.allowDictionary === 'boolean'
       ? options.allowDictionary
@@ -1044,7 +1561,7 @@ async function ensureAudioEntry(word, options = {}) {
     if (existing.status === 'pending') return existing.promise;
   }
   if (existing && (force || existing.status === 'error')) {
-    state.audioCache.delete(key);
+    deleteAudioCacheEntry(key);
   }
   const entry = {
     status: 'pending',
@@ -1073,7 +1590,7 @@ async function ensureAudioEntry(word, options = {}) {
     }
   })();
   entry.promise = promise;
-  state.audioCache.set(key, entry);
+  setAudioCacheEntry(key, entry);
   return promise;
 }
 
@@ -1203,7 +1720,7 @@ async function prefetchAudioForWords(words, options = {}) {
         .map((word) => getAudioCacheKey(word))
         .filter((word) => {
           if (!word) return false;
-          const entry = state.audioCache.get(word);
+          const entry = peekAudioCacheEntry(word);
           return !entry || entry.status !== 'ready';
         })
     )
@@ -1285,8 +1802,8 @@ function updateAudioPrefetchOverlay(completed, total) {
   const safeCompleted = Math.min(completed, safeTotal);
   const percent = safeTotal === 0 ? 100 : Math.round((safeCompleted / safeTotal) * 100);
   refs.audioPrefetchStatus.textContent = safeTotal
-    ? `Dang chuan bi audio: ${safeCompleted}/${safeTotal} (${percent}%)`
-    : 'Dang kiem tra cache audio...';
+    ? `Đang chuẩn bị audio ${safeCompleted}/${safeTotal} (${percent}%)`
+    : 'Đang kiểm tra cache audio...';
   refs.audioPrefetchProgressBar.style.width = `${percent}%`;
 }
 
@@ -1309,7 +1826,7 @@ function cancelAudioPrefetch() {
   if (!state.audioPrefetch.active) return;
   state.audioPrefetch.cancelled = true;
   hideAudioPrefetchOverlay();
-  showToast('Da huy viec tai audio truoc khi luyen tap.', 'info');
+  showToast('Đã hủy việc tải audio trước khi luyện tập.', 'info');
 }
 
 async function prepareAudioPractice(items) {
@@ -1328,7 +1845,7 @@ async function prepareAudioPractice(items) {
     return true;
   }
   const pendingWords = uniqueWords.filter((word) => {
-    const entry = state.audioCache.get(word);
+    const entry = peekAudioCacheEntry(word);
     return !entry || entry.status !== 'ready';
   });
   const total = uniqueWords.length;
@@ -1364,12 +1881,12 @@ async function prepareAudioPractice(items) {
     return false;
   }
   const missing = pendingWords.filter((word) => {
-    const entry = state.audioCache.get(word);
+    const entry = peekAudioCacheEntry(word);
     return !entry || entry.status !== 'ready';
   });
   if (missing.length) {
     showToast(
-      `Khong tim thay audio tu dien cho ${missing.length} tu. Se tao giong noi bo sung trong qua trinh luyen tap.`,
+      `Không tìm thấy audio từ điển cho ${missing.length} từ. Sẽ tạo giọng nói bổ sung trong quá trình luyện tập.`,
       'info'
     );
   }
@@ -1394,10 +1911,10 @@ async function loadAudioForCurrentWord(word) {
       const entry = await ensureAudioEntry(normalized, { allowDictionary: true, allowPuter: false });
       return entry;
     } catch (error) {
-      return state.audioCache.get(normalized);
+      return getAudioCacheEntry(normalized);
     }
   };
-  let entry = state.audioCache.get(normalized);
+  let entry = getAudioCacheEntry(normalized);
   try {
     if (!entry) {
       entry = await attemptDictionaryFetch();
@@ -1407,12 +1924,12 @@ async function loadAudioForCurrentWord(word) {
       } catch (_) {
         /* ignore */
       }
-      entry = state.audioCache.get(normalized);
+      entry = getAudioCacheEntry(normalized);
     } else if (entry.status === 'error' && entry.errorCode !== 'NO_DICTIONARY_AUDIO') {
       entry = await attemptDictionaryFetch();
     }
   } catch (error) {
-    entry = state.audioCache.get(normalized);
+    entry = getAudioCacheEntry(normalized);
     if (error?.code !== 'NO_DICTIONARY_AUDIO') {
       console.warn('Dictionary audio lookup encountered an error', error);
     }
@@ -1492,7 +2009,7 @@ async function loadAudioForCurrentWord(word) {
         }
       });
   };
-  const ongoingEntry = state.audioCache.get(normalized);
+  const ongoingEntry = peekAudioCacheEntry(normalized);
   if (ongoingEntry?.status === 'pending' && ongoingEntry.promise) {
     attachWhenReady(ongoingEntry.promise);
     return;
@@ -1516,12 +2033,12 @@ function playQuizAudio() {
   if (!hasAudio && canUseFallback) {
     state.quiz.audioError = false;
     const utterance = new SpeechSynthesisUtterance(state.quiz.current.word);
-    utterance.lang = 'en-US';
+    utterance.lang = 'en-GB';
     utterance.rate = shouldSlow ? 0.5 : 1;
-    updateQuizAudioStatus(shouldSlow ? 'Dang phat cham...' : 'Dang phat...');
-    utterance.onend = () => updateQuizAudioStatus('Bam de nghe lai');
+    updateQuizAudioStatus(shouldSlow ? 'Đang phát chậm...' : 'Đang phát...');
+    utterance.onend = () => updateQuizAudioStatus('Bấm để nghe lại');
     utterance.onerror = () => {
-      updateQuizAudioStatus('Khong phat duoc audio');
+      updateQuizAudioStatus('Không phát được audio');
       state.quiz.audioError = true;
       state.quiz.useSpeechFallback = false;
       updateQuizAudioControls();
@@ -1534,7 +2051,12 @@ function playQuizAudio() {
   if (!refs.quizAudioPlayer) return;
   try {
     state.quiz.audioError = false;
-    updateQuizAudioStatus(shouldSlow ? 'Dang phat cham...' : 'Dang phat...');
+    updateQuizAudioStatus(shouldSlow ? 'Đang phát chậm...' : 'Đang phát...');
+    const audioContext = ensureQuizAudioBoost();
+    if (audioContext?.state === 'suspended') {
+      audioContext.resume().catch(() => {});
+    }
+    refs.quizAudioPlayer.volume = 1;
     refs.quizAudioPlayer.pause();
     refs.quizAudioPlayer.currentTime = 0;
     refs.quizAudioPlayer.playbackRate = shouldSlow ? 0.5 : 1;
@@ -1543,9 +2065,9 @@ function playQuizAudio() {
       playPromise.catch(() => {});
     }
   } catch (error) {
-    console.warn('Khong the phat audio', error);
+    console.warn('Không thể phát audio', error);
     state.quiz.audioError = true;
-    updateQuizAudioStatus('Khong phat duoc audio');
+    updateQuizAudioStatus('Không phát được audio');
     updateQuizAudioControls();
   }
 }
@@ -1567,6 +2089,10 @@ function checkQuizAnswer() {
 
   if (wordMatches && typeMatches) {
     const usedHints = state.quiz.hintIndex > 0 || state.quiz.usedMeaningHint;
+    const revisit = state.quiz.attempts > 0 || usedHints;
+    if (state.quiz.stream.enabled) {
+      handleStreamingItemCompletion(state.quiz.current, { revisit });
+    }
     if (state.quiz.attempts === 0 && !usedHints) {
       state.quiz.score += 1;
       refs.quizFeedback.textContent = 'Chính xác!';
@@ -1574,7 +2100,9 @@ function checkQuizAnswer() {
     } else {
       refs.quizFeedback.textContent = 'Đúng nhưng không cộng điểm vì đã sử dụng gợi ý hoặc sai trước đó.';
       refs.quizFeedback.style.color = '#facc15';
-      state.quiz.wrongQueue.push(state.quiz.current);
+      if (revisit) {
+        state.quiz.wrongQueue.push(state.quiz.current);
+      }
     }
     playSound(refs.correctSound);
     updateQuizProgress();
@@ -1587,7 +2115,7 @@ function checkQuizAnswer() {
       refs.quizTypeInput.classList.add('error');
     }
     state.quiz.attempts += 1;
-    refs.quizFeedback.textContent = 'Chưa đúng. Thử lại nhé!';
+    refs.quizFeedback.textContent = 'Câu trả lời không đúng. Thử lại nhé!';
     refs.quizFeedback.style.color = '#f87171';
     playSound(refs.wrongSound);
   }
@@ -1642,7 +2170,7 @@ function endQuizSession() {
       refs.quizAudioPlayer.pause();
       refs.quizAudioPlayer.currentTime = 0;
     } catch (error) {
-      console.warn('Không thể dừng audio', error);
+      console.warn('Không thể sử dụng audio', error);
     }
   }
   state.quiz.current = null;
@@ -1674,7 +2202,7 @@ function exitQuizMode(options = {}) {
       refs.quizAudioPlayer.pause();
       refs.quizAudioPlayer.currentTime = 0;
     } catch (error) {
-      console.warn('Không thể dừng audio', error);
+      console.warn('Không thể sử dụng audio', error);
     }
   }
   updateQuizAudioControls();
@@ -1704,9 +2232,22 @@ function playSound(audioEl) {
 
 function shuffleArray(items) {
   const clone = [...items];
+  if (clone.length <= 1) {
+    return clone;
+  }
+  const cryptoApi = typeof globalThis !== 'undefined' ? globalThis.crypto : null;
+  if (cryptoApi?.getRandomValues) {
+    const buffer = new Uint32Array(clone.length);
+    cryptoApi.getRandomValues(buffer);
+    for (let i = clone.length - 1; i > 0; i -= 1) {
+      const j = buffer[i] % (i + 1);
+      [clone[i], clone[j]] = [clone[j], clone[i]];
+    }
+    return clone;
+  }
   for (let i = clone.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
-    [clone[i], clone[j]] = [clone[i], clone[j]];
+    [clone[i], clone[j]] = [clone[j], clone[i]];
   }
   return clone;
 }
@@ -1714,54 +2255,60 @@ function shuffleArray(items) {
 async function fetchPuterTts(word) {
   const text = (word || '').trim();
   if (!text) return null;
-  const globalScope = typeof window !== 'undefined' ? window : globalThis;
-  const puterAi =
-    globalScope?.puter?.ai ||
-    globalScope?.Puter?.ai ||
-    globalThis?.puter?.ai ||
-    globalThis?.Puter?.ai ||
-    null;
-  if (puterAi?.txt2speech) {
+  const engines = Array.from(
+    new Set([PUTER_TTS_OPTIONS.engine, PUTER_TTS_FALLBACK_ENGINE].filter(Boolean))
+  );
+  const puterAi = await resolvePuterAi();
+  if (!puterAi || typeof puterAi.txt2speech !== 'function') {
+    const unavailableError = new Error('PUTER_TTS_UNAVAILABLE');
+    unavailableError.code = 'PUTER_TTS_UNAVAILABLE';
+    throw unavailableError;
+  }
+
+  let fallbackLogged = false;
+  let lastError = null;
+  for (let index = 0; index < engines.length; index += 1) {
+    const engine = engines[index];
+    if (index > 0 && !fallbackLogged) {
+      console.info(`Falling back to Puter TTS engine "${engine}"`);
+      fallbackLogged = true;
+    }
     try {
-      const audio = await puterAi.txt2speech(text, {
-        voice: 'Amy',
-        engine: 'neural',
-        language: 'en-GB',
-      });
-      const blob = await convertPuterAudioToBlob(audio);
+      const audio = await withTimeout(
+        puterAi.txt2speech(text, {
+          language: PUTER_TTS_OPTIONS.language,
+          voice: PUTER_TTS_OPTIONS.voice,
+          engine,
+        }),
+        PUTER_TTS_TIMEOUT_MS,
+        `PUTER_TTS_${engine.toUpperCase()}_ATTEMPT_TIMEOUT`
+      );
+      const blob = await withTimeout(
+        convertPuterAudioToBlob(audio),
+        PUTER_TTS_TIMEOUT_MS,
+        `PUTER_TTS_${engine.toUpperCase()}_BLOB_TIMEOUT`
+      );
       if (blob?.size) {
         return blob;
       }
+      const emptyError = new Error('PUTER_TTS_EMPTY_AUDIO');
+      emptyError.code = 'PUTER_TTS_EMPTY';
+      lastError = emptyError;
     } catch (error) {
-      console.warn('puter.ai txt2speech failed', error);
+      const err = error instanceof Error ? error : new Error(String(error || 'PUTER_TTS_FAILED'));
+      if (!err.code) {
+        err.code = err.message?.includes('TIMEOUT') ? 'PUTER_TTS_TIMEOUT' : 'PUTER_TTS_FAILED';
+      }
+      lastError = err;
+      console.warn(`puter.ai txt2speech failed with engine ${engine}`, err);
     }
   }
-  return fetchPuterTtsViaApi(text);
-}
-
-async function fetchPuterTtsViaApi(word) {
-  if (!word) return null;
-  try {
-    const response = await fetch('https://api.puter.com/v2/tts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text: word, voice: 'en-GB', format: 'mp3' }),
-    });
-    if (!response.ok) {
-      console.warn('Puter REST TTS returned', response.status);
-      return null;
-    }
-    const arrayBuffer = await response.arrayBuffer();
-    if (!arrayBuffer || !arrayBuffer.byteLength) {
-      return null;
-    }
-    return new Blob([arrayBuffer], { type: 'audio/mpeg' });
-  } catch (error) {
-    console.warn('Puter REST TTS failed', error);
-    return null;
+  if (lastError) {
+    throw lastError;
   }
+  const fallbackError = new Error('PUTER_TTS_FAILED');
+  fallbackError.code = 'PUTER_TTS_FAILED';
+  throw fallbackError;
 }
 
 async function fetchDictionaryAudioUrl(word) {
@@ -1822,10 +2369,10 @@ async function handleBulkAdd() {
     refs.bulkTextarea.value = '';
     await refreshDataAfterMutation();
   } catch (error) {
-    showToast(parseFirebaseError(error, 'Thêm từ hàng loạt thất bại'), 'error');
+    showToast(parseFirebaseError(error, 'Thêm từ thất bại'), 'error');
   } finally {
     refs.bulkBtn.disabled = false;
-    refs.bulkBtn.textContent = 'Phân tích và thêm';
+    refs.bulkBtn.textContent = 'Thêm';
   }
 }
 
@@ -1890,8 +2437,8 @@ async function fetchAllVocabs() {
 
 function showBulkHelp() {
   refs.bulkFeedback.textContent =
-    `Mỗi dòng là một object:\n` +
-    `{"word":"gather","type":"v","meaning":"tụ hợp","tags":["group","verb"]}\n` +
+    `Mỗi dòng là 1 object:\n` +
+    `{"word":"gather","type":"v","meaning":"tập hợp","tags":["group","verb"]}\n` +
     `{'word': 'curate', 'type': 'v', 'meaning': 'chọn và sắp xếp'}\n`;
 }
 
