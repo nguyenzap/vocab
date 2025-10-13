@@ -192,9 +192,9 @@ const refs = {
   quizTypeHint: document.getElementById('quiz-type-hint'),
   quizWordLabel: document.getElementById('quiz-word-label'),
   quizTypeLabel: document.getElementById('quiz-type-label'),
-  quizVoiceToggle: document.getElementById('quiz-voice-toggle'),
-  quizVoiceButtons: Array.from(
-    document.querySelectorAll('#quiz-voice-toggle button[data-voice]')
+  voiceToggle: document.getElementById('global-voice-toggle'),
+  voiceButtons: Array.from(
+    document.querySelectorAll('#global-voice-toggle button[data-voice]')
   ),
   quizAudioControls: document.getElementById('quiz-audio-controls'),
   quizAudioBtn: document.getElementById('quiz-audio-btn'),
@@ -264,8 +264,8 @@ function bindEvents() {
     updateQuizAudioControls();
   });
 
-  if (Array.isArray(refs.quizVoiceButtons)) {
-    refs.quizVoiceButtons.forEach((button) => {
+  if (Array.isArray(refs.voiceButtons)) {
+    refs.voiceButtons.forEach((button) => {
       if (!button) return;
       button.addEventListener('click', (event) => {
         const target = event.currentTarget;
@@ -604,17 +604,17 @@ function handleAudioVoiceChange(voiceId) {
 }
 
 function updateVoiceToggle() {
-  if (!refs.quizVoiceToggle || !Array.isArray(refs.quizVoiceButtons)) return;
+  if (!refs.voiceToggle || !Array.isArray(refs.voiceButtons)) return;
   const currentVoice = getCurrentVoiceId();
   const voiceLabels = {
     english: 'Tiếng Anh',
     chinese: 'Tiếng Trung',
   };
-  refs.quizVoiceToggle.setAttribute(
+  refs.voiceToggle.setAttribute(
     'aria-label',
     `Giọng đọc: ${voiceLabels[currentVoice] || currentVoice}`
   );
-  refs.quizVoiceButtons.forEach((button) => {
+  refs.voiceButtons.forEach((button) => {
     if (!button) return;
     const voice = button.dataset.voice;
     const isActive = voice === currentVoice;
@@ -1522,13 +1522,6 @@ function updateQuizModeUI() {
       subtitle = 'Nghe và nhập đúng từ tiếng Anh cùng loại từ.';
     }
     refs.quizSubtitle.textContent = subtitle;
-  }
-  if (refs.quizVoiceToggle) {
-    const shouldShowVoiceToggle = mode === 'audio';
-    refs.quizVoiceToggle.classList.toggle('hidden', !shouldShowVoiceToggle);
-    if (shouldShowVoiceToggle) {
-      updateVoiceToggle();
-    }
   }
 }
 

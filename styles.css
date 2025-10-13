@@ -304,6 +304,10 @@ p {
   margin-top: 0.75rem;
 }
 
+.practice-mode .voice-toggle {
+  margin-top: 0;
+}
+
 .voice-toggle-btn {
   position: relative;
   width: 82px;
