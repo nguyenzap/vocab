@@ -48,6 +48,18 @@ p {
   display: none !important;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .btn {
   border: none;
   border-radius: var(--radius);
@@ -284,6 +296,64 @@ p {
 
 .toggle-switch[aria-pressed='true'] .toggle-text-off {
   opacity: 0;
+}
+
+.voice-toggle {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.voice-toggle-btn {
+  position: relative;
+  width: 82px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  color: rgba(226, 232, 240, 0.75);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  padding: 0;
+  overflow: hidden;
+}
+
+.voice-toggle-btn .voice-toggle-thumb {
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.7), rgba(14, 165, 233, 0.7));
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.35);
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.voice-toggle-btn .voice-toggle-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.voice-toggle-btn.active {
+  color: #0f172a;
+}
+
+.voice-toggle-btn.active .voice-toggle-thumb {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.voice-toggle-btn:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.8);
+  outline-offset: 4px;
 }
 
 .practice-mode-select {

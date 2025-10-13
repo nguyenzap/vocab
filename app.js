@@ -29,15 +29,48 @@ import {
 const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
 const LISTENING_MODE_PREFETCH_RATIO = 0.5;
 const AUDIO_CACHE_LIMIT = 150;
-const PUTER_TTS_OPTIONS = Object.freeze({
-  language: 'en-GB',
-  voice: 'Amy',
-  engine: 'generative',
+const AUDIO_VOICE_PROFILES = Object.freeze({
+  english: {
+    id: 'english',
+    label: 'EN',
+    language: 'en-GB',
+    voice: 'Amy',
+    engines: ['generative', 'neural'],
+    speechLang: 'en-GB',
+  },
+  chinese: {
+    id: 'chinese',
+    label: '中文',
+    language: 'cmn-CN',
+    voice: 'Zhiyu',
+    engines: ['neural'],
+    speechLang: 'cmn-CN',
+  },
 });
-const PUTER_TTS_FALLBACK_ENGINE = 'neural';
+const DEFAULT_AUDIO_VOICE = 'english';
 const PUTER_TTS_MAX_RETRIES = 3;
 const PUTER_TTS_TIMEOUT_MS = 15000;
 const QUIZ_AUDIO_GAIN = 2;
+
+function getVoiceProfile(voiceId) {
+  const key = voiceId && AUDIO_VOICE_PROFILES[voiceId] ? voiceId : DEFAULT_AUDIO_VOICE;
+  return AUDIO_VOICE_PROFILES[key];
+}
+
+function getCurrentVoiceId() {
+  return getVoiceProfile(state?.audioVoice)?.id ?? DEFAULT_AUDIO_VOICE;
+}
+
+function normalizeWord(word) {
+  return (word || '').trim().toLowerCase();
+}
+
+function getAudioCacheKey(word, voiceId = getCurrentVoiceId()) {
+  const normalized = normalizeWord(word);
+  if (!normalized) return '';
+  const profile = getVoiceProfile(voiceId);
+  return `${profile.id}:${normalized}`;
+}
 
 const state = {
   user: null,
@@ -59,6 +92,7 @@ const state = {
   isSearchMode: false,
   loading: false,
   practiceMode: 'meaning',
+  audioVoice: DEFAULT_AUDIO_VOICE,
   typeCheckEnabled: true,
   audioCache: new Map(),
   audioPrefetch: {
@@ -82,6 +116,7 @@ const state = {
     mode: 'meaning',
     meaningRevealed: false,
     usedMeaningHint: false,
+    voice: DEFAULT_AUDIO_VOICE,
     audioUrl: '',
     audioLoading: false,
     audioError: false,
@@ -157,6 +192,10 @@ const refs = {
   quizTypeHint: document.getElementById('quiz-type-hint'),
   quizWordLabel: document.getElementById('quiz-word-label'),
   quizTypeLabel: document.getElementById('quiz-type-label'),
+  quizVoiceToggle: document.getElementById('quiz-voice-toggle'),
+  quizVoiceButtons: Array.from(
+    document.querySelectorAll('#quiz-voice-toggle button[data-voice]')
+  ),
   quizAudioControls: document.getElementById('quiz-audio-controls'),
   quizAudioBtn: document.getElementById('quiz-audio-btn'),
   quizAudioStatus: document.getElementById('quiz-audio-status'),
@@ -225,6 +264,18 @@ function bindEvents() {
     updateQuizAudioControls();
   });
 
+  if (Array.isArray(refs.quizVoiceButtons)) {
+    refs.quizVoiceButtons.forEach((button) => {
+      if (!button) return;
+      button.addEventListener('click', (event) => {
+        const target = event.currentTarget;
+        const voice = target?.dataset?.voice;
+        if (!voice) return;
+        handleAudioVoiceChange(voice);
+      });
+    });
+  }
+
   if (refs.searchInput) {
     refs.searchInput.addEventListener(
       'input',
@@ -266,6 +317,7 @@ function bindEvents() {
   handlePracticeModeChange();
   updatePracticeModeControl();
   updateTypeCheckToggle();
+  updateVoiceToggle();
 }
 
 async function subscribeToLists() {
@@ -523,6 +575,52 @@ function updateTypeCheckToggle() {
   const enabled = Boolean(state.typeCheckEnabled);
   button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
   button.setAttribute('aria-label', `Kiểm tra loại từ: ${enabled ? 'Bật' : 'Tắt'}`);
+}
+
+function handleAudioVoiceChange(voiceId) {
+  const profile = getVoiceProfile(voiceId);
+  if (!profile) return;
+  const currentVoice = getCurrentVoiceId();
+  if (profile.id === currentVoice) return;
+  state.audioVoice = profile.id;
+  state.quiz.voice = profile.id;
+  updateVoiceToggle();
+  if (state.quiz.mode === 'audio') {
+    state.quiz.audioLoading = true;
+    state.quiz.audioError = false;
+    state.quiz.useSpeechFallback = false;
+    updateQuizAudioControls();
+    releaseCurrentAudioUrl();
+    state.quiz.audioUrl = '';
+    state.quiz.audioObjectUrl = '';
+    state.quiz.audioPlayCount = 0;
+    if (state.quiz.current?.word) {
+      loadAudioForCurrentWord(state.quiz.current.word);
+    } else {
+      state.quiz.audioLoading = false;
+      updateQuizAudioControls();
+    }
+  }
+}
+
+function updateVoiceToggle() {
+  if (!refs.quizVoiceToggle || !Array.isArray(refs.quizVoiceButtons)) return;
+  const currentVoice = getCurrentVoiceId();
+  const voiceLabels = {
+    english: 'Tiếng Anh',
+    chinese: 'Tiếng Trung',
+  };
+  refs.quizVoiceToggle.setAttribute(
+    'aria-label',
+    `Giọng đọc: ${voiceLabels[currentVoice] || currentVoice}`
+  );
+  refs.quizVoiceButtons.forEach((button) => {
+    if (!button) return;
+    const voice = button.dataset.voice;
+    const isActive = voice === currentVoice;
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    button.classList.toggle('active', isActive);
+  });
 }
 
 async function handleSignOut(event) {
@@ -974,8 +1072,9 @@ function startChunkAudioPrefetch(chunk) {
     .filter(Boolean);
   if (!words.length) return null;
   const promise = prefetchAudioForWords(words, {
-    allowDictionary: false,
+    allowDictionary: state.quiz.voice === 'english',
     allowPuter: true,
+    voiceId: state.quiz.voice,
     concurrency: Math.min(AUDIO_PREFETCH_CONCURRENCY, words.length),
     shouldContinue: () =>
       state.quiz.active && state.quiz.mode === 'audio' && state.quiz.stream.enabled,
@@ -1101,6 +1200,7 @@ function enterQuizMode(items, mode = 'meaning', options = {}) {
   const streamingActive = mode === 'audio' && stream?.enabled;
   state.quiz.active = true;
   state.quiz.mode = mode === 'audio' ? 'audio' : mode === 'word' ? 'word' : 'meaning';
+  state.quiz.voice = getCurrentVoiceId();
   state.quiz.typeCheckEnabled = Boolean(state.typeCheckEnabled);
   if (streamingActive && options.streamChunk) {
     integrateListeningChunk(options.streamChunk, { replaceQueue: true });
@@ -1120,8 +1220,9 @@ function enterQuizMode(items, mode = 'meaning', options = {}) {
   if (state.quiz.mode === 'audio' && !streamingActive) {
     const wordsToPrefetch = items.map((item) => item?.word || '');
     state.quiz.audioPrefetchPromise = prefetchAudioForWords(wordsToPrefetch, {
-      allowDictionary: false,
+      allowDictionary: state.quiz.voice === 'english',
       allowPuter: true,
+      voiceId: state.quiz.voice,
       concurrency: Math.min(2, Math.max(1, wordsToPrefetch.length)),
       shouldContinue: () => state.quiz.active && state.quiz.mode === 'audio',
     })
@@ -1209,6 +1310,7 @@ function resetQuizState() {
     mode: 'meaning',
     meaningRevealed: false,
     usedMeaningHint: false,
+    voice: getCurrentVoiceId(),
     audioUrl: '',
     audioLoading: false,
     audioError: false,
@@ -1239,6 +1341,7 @@ function prepareNextQuizQuestion() {
   if (!refs.quizMeaning || !refs.quizWordInput || !refs.quizTypeInput) return;
   const streamingActive = state.quiz.mode === 'audio' && state.quiz.stream?.enabled;
   const stream = state.quiz.stream;
+  state.quiz.voice = getCurrentVoiceId();
   state.quiz.typeCheckEnabled = Boolean(state.typeCheckEnabled);
   releaseCurrentAudioUrl();
   const noPendingQuestions = state.quiz.unseen.length === 0 && state.quiz.wrongQueue.length === 0;
@@ -1419,6 +1522,13 @@ function updateQuizModeUI() {
       subtitle = 'Nghe và nhập đúng từ tiếng Anh cùng loại từ.';
     }
     refs.quizSubtitle.textContent = subtitle;
+  }
+  if (refs.quizVoiceToggle) {
+    const shouldShowVoiceToggle = mode === 'audio';
+    refs.quizVoiceToggle.classList.toggle('hidden', !shouldShowVoiceToggle);
+    if (shouldShowVoiceToggle) {
+      updateVoiceToggle();
+    }
   }
 }
 
@@ -1612,19 +1722,21 @@ function ensureQuizAudioBoost() {
   return quizAudioBoost.context;
 }
 
-function getAudioCacheKey(word) {
-  return (word || '').trim().toLowerCase();
-}
-
 async function ensureAudioEntry(word, options = {}) {
-  const key = getAudioCacheKey(word);
+  const normalized = normalizeWord(word);
+  if (!normalized) return null;
+  const voiceId =
+    options.voiceId && AUDIO_VOICE_PROFILES[options.voiceId]
+      ? options.voiceId
+      : getCurrentVoiceId();
+  const key = getAudioCacheKey(normalized, voiceId);
   if (!key) return null;
   const force = Boolean(options.force);
   const existing = getAudioCacheEntry(key);
   const allowDictionary =
     typeof options.allowDictionary === 'boolean'
       ? options.allowDictionary
-      : existing?.errorCode !== 'NO_DICTIONARY_AUDIO';
+      : voiceId === 'english' && existing?.errorCode !== 'NO_DICTIONARY_AUDIO';
   const allowPuter =
     typeof options.allowPuter === 'boolean' ? options.allowPuter : true;
   if (existing && !force) {
@@ -1644,7 +1756,11 @@ async function ensureAudioEntry(word, options = {}) {
   };
   const promise = (async () => {
     try {
-      const asset = await fetchAudioAsset(key, { allowDictionary, allowPuter });
+      const asset = await fetchAudioAsset(normalized, {
+        allowDictionary,
+        allowPuter,
+        voiceId,
+      });
       entry.status = 'ready';
       entry.blob = asset?.blob ?? null;
       entry.source = asset?.source ?? null;
@@ -1666,9 +1782,14 @@ async function ensureAudioEntry(word, options = {}) {
 }
 
 async function fetchAudioAsset(word, options = {}) {
-  const normalized = getAudioCacheKey(word);
+  const normalized = normalizeWord(word);
   if (!normalized) return null;
-  const allowDictionary = options.allowDictionary !== false;
+  const voiceId =
+    options.voiceId && AUDIO_VOICE_PROFILES[options.voiceId]
+      ? options.voiceId
+      : getCurrentVoiceId();
+  const allowDictionary =
+    options.allowDictionary !== false && voiceId === 'english';
   const allowPuter = options.allowPuter !== false;
   let lastError = null;
   if (allowDictionary) {
@@ -1698,7 +1819,7 @@ async function fetchAudioAsset(word, options = {}) {
   }
   if (allowPuter) {
     try {
-      const blob = await fetchPuterTts(normalized);
+      const blob = await fetchPuterTts(normalized, voiceId);
       if (blob?.size) {
         return { blob, source: 'puter' };
       }
@@ -1785,26 +1906,32 @@ async function prefetchAudioForWords(words, options = {}) {
     }
     return;
   }
-  const unique = Array.from(
-    new Set(
-      words
-        .map((word) => getAudioCacheKey(word))
-        .filter((word) => {
-          if (!word) return false;
-          const entry = peekAudioCacheEntry(word);
-          return !entry || entry.status !== 'ready';
-        })
-    )
-  );
+  const voiceId =
+    options.voiceId && AUDIO_VOICE_PROFILES[options.voiceId]
+      ? options.voiceId
+      : getCurrentVoiceId();
+  const force = Boolean(options.force);
+  const targets = [];
+  const seenKeys = new Set();
+  for (const word of words) {
+    const normalized = normalizeWord(word);
+    if (!normalized) continue;
+    const key = getAudioCacheKey(normalized, voiceId);
+    if (!key || seenKeys.has(key)) continue;
+    seenKeys.add(key);
+    const entry = peekAudioCacheEntry(key);
+    if (entry && entry.status === 'ready' && !force) continue;
+    targets.push(normalized);
+  }
   const total =
     typeof options.total === 'number' && options.total > 0
       ? options.total
-      : unique.length;
+      : targets.length;
   let completed =
     typeof options.initialCompleted === 'number' && options.initialCompleted >= 0
       ? Math.min(options.initialCompleted, total)
       : 0;
-  if (!unique.length) {
+  if (!targets.length) {
     if (options.onProgress) {
       options.onProgress(total, total, null);
     }
@@ -1815,17 +1942,19 @@ async function prefetchAudioForWords(words, options = {}) {
   }
   const shouldContinue =
     typeof options.shouldContinue === 'function' ? options.shouldContinue : () => true;
-  const allowDictionary = options.allowDictionary !== false;
+  const allowDictionary =
+    typeof options.allowDictionary === 'boolean'
+      ? options.allowDictionary
+      : voiceId === 'english';
   const allowPuter = options.allowPuter !== false;
-  const force = Boolean(options.force);
   const maxConcurrency =
     typeof options.concurrency === 'number' && options.concurrency > 0
-      ? Math.min(Math.floor(options.concurrency), unique.length)
-      : Math.min(AUDIO_PREFETCH_CONCURRENCY, unique.length);
+      ? Math.min(Math.floor(options.concurrency), targets.length)
+      : Math.min(AUDIO_PREFETCH_CONCURRENCY, targets.length);
   let cursor = 0;
   const takeNext = () => {
-    if (cursor >= unique.length) return null;
-    const nextWord = unique[cursor];
+    if (cursor >= targets.length) return null;
+    const nextWord = targets[cursor];
     cursor += 1;
     return nextWord;
   };
@@ -1834,7 +1963,12 @@ async function prefetchAudioForWords(words, options = {}) {
       const nextWord = takeNext();
       if (!nextWord) break;
       try {
-        await ensureAudioEntry(nextWord, { force, allowDictionary, allowPuter });
+        await ensureAudioEntry(nextWord, {
+          force,
+          allowDictionary,
+          allowPuter,
+          voiceId,
+        });
       } catch (error) {
         if (error?.code !== 'NO_DICTIONARY_AUDIO') {
           console.warn('Audio prefetch failed for word', nextWord, error);
@@ -1901,28 +2035,37 @@ function cancelAudioPrefetch() {
 }
 
 async function loadAudioForCurrentWord(word) {
-  const normalized = getAudioCacheKey(word);
+  const normalizedWord = normalizeWord(word);
+  const voiceId = state.quiz.voice || getCurrentVoiceId();
+  state.quiz.voice = voiceId;
+  const cacheKey = getAudioCacheKey(normalizedWord, voiceId);
   releaseCurrentAudioUrl();
-  if (!normalized) {
+  if (!normalizedWord) {
     state.quiz.audioLoading = false;
     state.quiz.audioUrl = '';
     state.quiz.audioError = false;
     state.quiz.audioObjectUrl = '';
     state.quiz.useSpeechFallback = false;
-  state.quiz.usedTypeHint = false;
+    state.quiz.usedTypeHint = false;
     updateQuizAudioControls();
     return;
   }
   const canUseSpeech = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const allowDictionary = voiceId === 'english';
   const attemptDictionaryFetch = async () => {
+    if (!allowDictionary) return null;
     try {
-      const entry = await ensureAudioEntry(normalized, { allowDictionary: true, allowPuter: false });
+      const entry = await ensureAudioEntry(normalizedWord, {
+        allowDictionary: true,
+        allowPuter: false,
+        voiceId,
+      });
       return entry;
     } catch (error) {
-      return getAudioCacheEntry(normalized);
+      return getAudioCacheEntry(cacheKey);
     }
   };
-  let entry = getAudioCacheEntry(normalized);
+  let entry = getAudioCacheEntry(cacheKey);
   try {
     if (!entry) {
       entry = await attemptDictionaryFetch();
@@ -1932,24 +2075,24 @@ async function loadAudioForCurrentWord(word) {
       } catch (_) {
         /* ignore */
       }
-      entry = getAudioCacheEntry(normalized);
+      entry = getAudioCacheEntry(cacheKey);
     } else if (entry.status === 'error' && entry.errorCode !== 'NO_DICTIONARY_AUDIO') {
       entry = await attemptDictionaryFetch();
     }
   } catch (error) {
-    entry = getAudioCacheEntry(normalized);
+    entry = getAudioCacheEntry(cacheKey);
     if (error?.code !== 'NO_DICTIONARY_AUDIO') {
       console.warn('Dictionary audio lookup encountered an error', error);
     }
   }
-  const currentWord = getAudioCacheKey(state.quiz.current?.word);
-  if (normalized !== currentWord) {
+  const currentKey = getAudioCacheKey(state.quiz.current?.word, voiceId);
+  if (cacheKey !== currentKey) {
     return;
   }
   if (entry && entry.status === 'ready' && entry.blob) {
     const audioUrl = URL.createObjectURL(entry.blob);
     state.quiz.useSpeechFallback = false;
-  state.quiz.usedTypeHint = false;
+    state.quiz.usedTypeHint = false;
     state.quiz.audioError = false;
     state.quiz.audioUrl = audioUrl;
     state.quiz.audioPlayCount = 0;
@@ -1981,8 +2124,8 @@ async function loadAudioForCurrentWord(word) {
     if (!promise?.then) return;
     promise
       .then((result) => {
-        const activeWord = getAudioCacheKey(state.quiz.current?.word);
-        if (activeWord !== normalized) return;
+        const activeKey = getAudioCacheKey(state.quiz.current?.word, voiceId);
+        if (activeKey !== cacheKey) return;
         if (result?.status !== 'ready' || !result.blob) return;
         releaseCurrentAudioUrl();
         const audioUrl = URL.createObjectURL(result.blob);
@@ -1990,7 +2133,7 @@ async function loadAudioForCurrentWord(word) {
         state.quiz.audioObjectUrl = audioUrl;
         state.quiz.audioPlayCount = 0;
         state.quiz.useSpeechFallback = false;
-  state.quiz.usedTypeHint = false;
+        state.quiz.usedTypeHint = false;
         state.quiz.audioError = false;
         if (refs.quizAudioPlayer) {
           try {
@@ -2012,19 +2155,23 @@ async function loadAudioForCurrentWord(word) {
         }
       })
       .finally(() => {
-        const activeWord = getAudioCacheKey(state.quiz.current?.word);
-        if (activeWord === normalized) {
+        const activeKey = getAudioCacheKey(state.quiz.current?.word, voiceId);
+        if (activeKey === cacheKey) {
           state.quiz.audioError = state.quiz.audioUrl ? false : !canUseSpeech;
           updateQuizAudioControls();
         }
       });
   };
-  const ongoingEntry = peekAudioCacheEntry(normalized);
+  const ongoingEntry = peekAudioCacheEntry(cacheKey);
   if (ongoingEntry?.status === 'pending' && ongoingEntry.promise) {
     attachWhenReady(ongoingEntry.promise);
     return;
   }
-  const fetchPromise = ensureAudioEntry(normalized, { allowDictionary: false, allowPuter: true });
+  const fetchPromise = ensureAudioEntry(normalizedWord, {
+    allowDictionary: false,
+    allowPuter: true,
+    voiceId,
+  });
   attachWhenReady(fetchPromise);
 }
 
@@ -2039,11 +2186,12 @@ function playQuizAudio() {
   const nextCount = state.quiz.audioPlayCount + 1;
   const shouldSlow = nextCount % 3 === 0;
   state.quiz.audioPlayCount = nextCount;
+  const voiceProfile = getVoiceProfile(state.quiz.voice);
 
   if (!hasAudio && canUseFallback) {
     state.quiz.audioError = false;
     const utterance = new SpeechSynthesisUtterance(state.quiz.current.word);
-    utterance.lang = 'en-GB';
+    utterance.lang = voiceProfile.speechLang || voiceProfile.language || 'en-GB';
     utterance.rate = shouldSlow ? 0.5 : 1;
     updateQuizAudioStatus(shouldSlow ? 'Đang phát chậm...' : 'Đang phát...');
     utterance.onend = () => updateQuizAudioStatus('Bấm để nghe lại');
@@ -2271,12 +2419,13 @@ function shuffleArray(items) {
   return clone;
 }
 
-async function fetchPuterTts(word) {
+async function fetchPuterTts(word, voiceId = getCurrentVoiceId()) {
   const text = (word || '').trim();
   if (!text) return null;
-  const engines = Array.from(
-    new Set([PUTER_TTS_OPTIONS.engine, PUTER_TTS_FALLBACK_ENGINE].filter(Boolean))
-  );
+  const profile = getVoiceProfile(voiceId);
+  const engines = Array.isArray(profile.engines) && profile.engines.length
+    ? Array.from(new Set(profile.engines))
+    : ['neural'];
   const puterAi = await resolvePuterAi();
   if (!puterAi || typeof puterAi.txt2speech !== 'function') {
     const unavailableError = new Error('PUTER_TTS_UNAVAILABLE');
@@ -2289,14 +2438,14 @@ async function fetchPuterTts(word) {
   for (let index = 0; index < engines.length; index += 1) {
     const engine = engines[index];
     if (index > 0 && !fallbackLogged) {
-      console.info(`Falling back to Puter TTS engine "${engine}"`);
+      console.info(`Falling back to Puter TTS engine "${engine}" for voice "${profile.id}"`);
       fallbackLogged = true;
     }
     try {
       const audio = await withTimeout(
         puterAi.txt2speech(text, {
-          language: PUTER_TTS_OPTIONS.language,
-          voice: PUTER_TTS_OPTIONS.voice,
+          language: profile.language,
+          voice: profile.voice,
           engine,
         }),
         PUTER_TTS_TIMEOUT_MS,
@@ -2319,7 +2468,10 @@ async function fetchPuterTts(word) {
         err.code = err.message?.includes('TIMEOUT') ? 'PUTER_TTS_TIMEOUT' : 'PUTER_TTS_FAILED';
       }
       lastError = err;
-      console.warn(`puter.ai txt2speech failed with engine ${engine}`, err);
+      console.warn(
+        `puter.ai txt2speech failed with engine ${engine} for voice "${profile.id}"`,
+        err
+      );
     }
   }
   if (lastError) {
