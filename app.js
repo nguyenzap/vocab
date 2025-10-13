@@ -88,6 +88,7 @@ const state = {
     useSpeechFallback: false,
     audioPrefetchPromise: null,
     audioPlayCount: 0,
+    usedTypeHint: false,
     stream: {
       enabled: false,
       chunkSize: LISTENING_MODE_DEFAULT_CHUNK_SIZE,
@@ -210,6 +211,7 @@ function bindEvents() {
       updateQuizAudioStatus('Bấm để nghe lại');
     } else {
       state.quiz.useSpeechFallback = false;
+  state.quiz.usedTypeHint = false;
       state.quiz.audioError = true;
       updateQuizAudioStatus('Không phát được audio');
     }
@@ -1180,6 +1182,7 @@ function resetQuizState() {
     useSpeechFallback: false,
     audioPrefetchPromise: null,
     audioPlayCount: 0,
+    usedTypeHint: false,
   });
 }
 
@@ -1215,6 +1218,7 @@ function prepareNextQuizQuestion() {
     state.quiz.audioLoading = true;
     state.quiz.audioError = false;
     state.quiz.useSpeechFallback = false;
+    state.quiz.usedTypeHint = false;
     if (refs.quizWordInput) {
       refs.quizWordInput.value = '';
       refs.quizWordInput.disabled = true;
@@ -1259,6 +1263,7 @@ function prepareNextQuizQuestion() {
   state.quiz.audioError = false;
   state.quiz.audioPlayCount = 0;
   state.quiz.useSpeechFallback = false;
+  state.quiz.usedTypeHint = false;
   refs.quizLetterHint.textContent = '';
   refs.quizTypeHint.textContent = '';
   refs.quizFeedback.textContent = '';
@@ -1837,6 +1842,7 @@ async function loadAudioForCurrentWord(word) {
     state.quiz.audioError = false;
     state.quiz.audioObjectUrl = '';
     state.quiz.useSpeechFallback = false;
+  state.quiz.usedTypeHint = false;
     updateQuizAudioControls();
     return;
   }
@@ -1876,6 +1882,7 @@ async function loadAudioForCurrentWord(word) {
   if (entry && entry.status === 'ready' && entry.blob) {
     const audioUrl = URL.createObjectURL(entry.blob);
     state.quiz.useSpeechFallback = false;
+  state.quiz.usedTypeHint = false;
     state.quiz.audioError = false;
     state.quiz.audioUrl = audioUrl;
     state.quiz.audioPlayCount = 0;
@@ -1916,6 +1923,7 @@ async function loadAudioForCurrentWord(word) {
         state.quiz.audioObjectUrl = audioUrl;
         state.quiz.audioPlayCount = 0;
         state.quiz.useSpeechFallback = false;
+  state.quiz.usedTypeHint = false;
         state.quiz.audioError = false;
         if (refs.quizAudioPlayer) {
           try {
@@ -1976,6 +1984,7 @@ function playQuizAudio() {
       updateQuizAudioStatus('Không phát được audio');
       state.quiz.audioError = true;
       state.quiz.useSpeechFallback = false;
+  state.quiz.usedTypeHint = false;
       updateQuizAudioControls();
     };
     window.speechSynthesis.cancel();
@@ -2023,7 +2032,9 @@ function checkQuizAnswer() {
   const typeMatches = !requiresType || userType === correctType;
 
   if (wordMatches && typeMatches) {
-    const usedHints = state.quiz.hintIndex > 0 || state.quiz.usedMeaningHint;
+    const meaningPenalty = state.quiz.mode === 'audio' ? false : state.quiz.usedMeaningHint;
+    const typeHintPenalty = state.quiz.mode === 'meaning' ? state.quiz.usedTypeHint : false;
+    const usedHints = state.quiz.hintIndex > 0 || meaningPenalty || typeHintPenalty;
     const revisit = state.quiz.attempts > 0 || usedHints;
     if (state.quiz.stream.enabled) {
       handleStreamingItemCompletion(state.quiz.current, { revisit });
@@ -2076,6 +2087,7 @@ function showQuizWordHint() {
 function showQuizTypeHint() {
   if (!state.quiz.active || !state.quiz.current) return;
   if (state.quiz.mode === 'audio') return;
+  state.quiz.usedTypeHint = true;
   refs.quizTypeHint.textContent = state.quiz.current.type || '';
 }
 
@@ -2411,3 +2423,7 @@ function openPrompt({ title, label, value = '', placeholder = '' }) {
 }
 
 init();
+
+
+
+
