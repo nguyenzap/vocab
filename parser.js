@@ -10,6 +10,32 @@ import { chunkArray, sanitizeTags, showToast } from './utils.js';
 
 const SINGLE_QUOTE_RE = /'([^']*)'/g;
 const TRAILING_COMMA_RE = /,\s*([}\]])/g;
+const SMART_QUOTE_MAP = Object.freeze({
+  '\u2018': "'",
+  '\u2019': "'",
+  '\u201A': "'",
+  '\u201B': "'",
+  '\u2032': "'",
+  '\u2035': "'",
+  '\u2039': "'",
+  '\u203A': "'",
+  '\u02BC': "'",
+  '\u201C': '"',
+  '\u201D': '"',
+  '\u201E': '"',
+  '\u201F': '"',
+  '\u00AB': '"',
+  '\u00BB': '"',
+});
+const SMART_QUOTE_PATTERN = Object.keys(SMART_QUOTE_MAP)
+  .join('')
+  .replace(/[\\[\]{}()*+?.^$|]/g, '\\$&');
+const SMART_QUOTE_REGEX = new RegExp(`[${SMART_QUOTE_PATTERN}]`, 'g');
+
+function normalizeQuotes(text) {
+  if (!text || typeof text !== 'string') return text;
+  return text.replace(SMART_QUOTE_REGEX, (char) => SMART_QUOTE_MAP[char] || char);
+}
 
 function tryParseJson(line) {
   try {
@@ -32,18 +58,20 @@ function normalizeEntry(raw, lineNumber) {
   if (typeof raw !== 'object' || raw === null) {
     return { error: `Dòng ${lineNumber}: không phải một object.` };
   }
-  const word = String(raw.word ?? '').trim();
-  const type = String(raw.type ?? '').trim();
-  const meaning = String(raw.meaning ?? '').trim();
+  const word = normalizeQuotes(String(raw.word ?? '')).trim();
+  const type = normalizeQuotes(String(raw.type ?? '')).trim();
+  const meaning = normalizeQuotes(String(raw.meaning ?? '')).trim();
 
   if (!word) return { error: `Dòng ${lineNumber}: "word" là bắt buộc.` };
   if (!type) return { error: `Dòng ${lineNumber}: "type" là bắt buộc.` };
   if (!meaning) return { error: `Dòng ${lineNumber}: "meaning" là bắt buộc.` };
 
-  const tags = sanitizeTags(raw.tags);
-  const example = raw.example ? String(raw.example).trim() : '';
-  const note = raw.note ? String(raw.note).trim() : '';
-  const phonetic = raw.phonetic ? String(raw.phonetic).trim() : '';
+  const tags = sanitizeTags(raw.tags)
+    .map((tag) => normalizeQuotes(String(tag)).trim())
+    .filter(Boolean);
+  const example = raw.example ? normalizeQuotes(String(raw.example)).trim() : '';
+  const note = raw.note ? normalizeQuotes(String(raw.note)).trim() : '';
+  const phonetic = raw.phonetic ? normalizeQuotes(String(raw.phonetic)).trim() : '';
   let dueAt = null;
   if (raw.dueAt) {
     const parsed = Date.parse(String(raw.dueAt));
@@ -73,7 +101,7 @@ export function parseBulkInput(text) {
   const errors = [];
 
   lines.forEach((line, index) => {
-    const trimmed = line.trim();
+    const trimmed = normalizeQuotes(line.trim());
     if (!trimmed) return;
     const json = tryParseJson(trimmed) ?? tryNormalizePythonDict(trimmed);
     if (!json) {
