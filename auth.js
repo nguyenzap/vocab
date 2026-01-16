@@ -66,6 +66,10 @@ async function initAuthWatcher() {
       window.location.replace('./app.html');
       return;
     }
+    if (page === 'admin' && !user) {
+      window.location.replace('./index.html');
+      return;
+    }
     if (page === 'app' && !user) {
       window.location.replace('./index.html');
       return;

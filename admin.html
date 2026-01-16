@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vocab Coach | Admin</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="admin">
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  <header class="app-header">
+    <div class="header-info">
+      <h1>Vocab Coach</h1>
+      <p id="user-email" class="user-email"></p>
+    </div>
+    <div class="header-actions">
+      <a class="btn secondary" href="./app.html">Back to app</a>
+      <button id="sign-out-btn" class="btn danger">Sign out</button>
+    </div>
+  </header>
+  <main class="admin-layout">
+    <section class="content-panel admin-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Student activity</h2>
+          <p class="panel-subtitle">Tracks if students have practiced vocabulary in the app.</p>
+        </div>
+        <p id="admin-updated" class="panel-meta"></p>
+      </div>
+      <div id="admin-message" class="admin-message hidden"></div>
+      <div class="table-wrapper admin-table-wrapper">
+        <table class="vocab-table admin-table">
+          <thead>
+            <tr>
+              <th class="admin-col-email">Email</th>
+              <th class="admin-col-status">Status</th>
+              <th class="admin-col-seen">Last seen</th>
+              <th class="admin-col-practice">Last practice</th>
+              <th class="admin-col-sessions">Sessions</th>
+              <th class="admin-col-score">Last score</th>
+              <th class="admin-col-mode">Mode</th>
+              <th class="admin-col-list">List</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody">
+            <tr>
+              <td colspan="8" class="empty-state">Loading data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./admin.js"></script>
+</body>
+</html>

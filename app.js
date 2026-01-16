@@ -3,6 +3,7 @@ import { requireAuth, signOutUser } from './auth.js';
 import {
   collection,
   doc,
+  setDoc,
   updateDoc,
   deleteDoc,
   addDoc,
@@ -12,11 +13,13 @@ import {
   orderBy,
   startAfter,
   serverTimestamp,
+  increment,
   getCountFromServer,
   onSnapshot,
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { parseBulkInput, upsertBulkVocabs, normalizeEntry } from './parser.js';
+import { isAdminUser } from './admin-config.js';
 import {
   showToast,
   debounce,
@@ -166,6 +169,7 @@ const refs = {
   bulkHelpBtn: document.getElementById('bulk-help-btn'),
   listTitle: document.getElementById('current-list-name'),
   signOutBtn: document.getElementById('sign-out-btn'),
+  adminLink: document.getElementById('admin-link-btn'),
   modal: document.getElementById('modal'),
   modalTitle: document.getElementById('modal-title'),
   modalLabel: document.getElementById('modal-label'),
@@ -211,6 +215,8 @@ const refs = {
 async function init() {
   try {
     state.user = await requireAuth();
+    updateAdminLink();
+    recordUserPresence();
     bindEvents();
     await subscribeToLists();
   } catch (error) {
@@ -219,6 +225,51 @@ async function init() {
     }
     showToast(parseFirebaseError(error), 'error');
   }
+}
+
+function updateAdminLink() {
+  if (!refs.adminLink) return;
+  refs.adminLink.classList.toggle('hidden', !isAdminUser(state.user));
+}
+
+async function recordUserPresence() {
+  if (!state.user) return;
+  try {
+    await setDoc(
+      doc(db, 'users', state.user.uid),
+      { lastSeenAt: serverTimestamp() },
+      { merge: true }
+    );
+  } catch (error) {
+    console.warn('Unable to update last seen timestamp', error);
+  }
+}
+
+function recordPracticeStart() {
+  if (!state.user || !state.selectedListId) return;
+  const payload = {
+    lastPracticeAt: serverTimestamp(),
+    lastPracticeMode: state.quiz.mode,
+    lastPracticeListId: state.selectedListId,
+    lastPracticeListName: state.selectedListName || '',
+    lastPracticeTotal: state.quiz.total,
+    practiceSessions: increment(1),
+  };
+  setDoc(doc(db, 'users', state.user.uid), payload, { merge: true }).catch((error) => {
+    console.warn('Unable to update practice start stats', error);
+  });
+}
+
+function recordPracticeCompletion() {
+  if (!state.user) return;
+  const payload = {
+    lastPracticeCompletedAt: serverTimestamp(),
+    lastPracticeScore: state.quiz.score,
+    lastPracticeTotal: state.quiz.total,
+  };
+  setDoc(doc(db, 'users', state.user.uid), payload, { merge: true }).catch((error) => {
+    console.warn('Unable to update practice completion stats', error);
+  });
 }
 
 function bindEvents() {
@@ -1260,6 +1311,7 @@ function enterQuizMode(items, mode = 'meaning', options = {}) {
   updatePracticeModeControl();
   updatePracticeAvailability();
   updateQuizProgress();
+  recordPracticeStart();
   prepareNextQuizQuestion();
 }
 
@@ -2335,6 +2387,7 @@ function endQuizSession() {
   }
   state.quiz.current = null;
   updateQuizProgress();
+  recordPracticeCompletion();
 }
 
 function exitQuizMode(options = {}) {
@@ -2640,7 +2693,3 @@ function openPrompt({ title, label, value = '', placeholder = '' }) {
 }
 
 init();
-
-
-
-
