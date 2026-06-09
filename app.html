@@ -139,9 +139,43 @@
       <section class="form-section">
         <div class="panel-header">
           <h3>Thêm từ mới</h3>
-          <button id="bulk-help-btn" class="btn link small">Hướng dẫn định dạng</button>
+            <label for="single-input-toggle" class="type-check-label">Nhập từ đơn</label>
+            <button
+              id="single-input-toggle"
+              class="toggle-switch"
+              type="button"
+              aria-pressed="true"
+              aria-label="Nhập từ đơn: Bật"
+            >
+              <span class="toggle-track">
+                <span class="toggle-text toggle-text-on" aria-hidden="true">ON</span>
+                <span class="toggle-text toggle-text-off" aria-hidden="true">OFF</span>
+                <span class="toggle-thumb" aria-hidden="true"></span>
+              </span>
+            </button>
+          <button id="bulk-help-btn" class="btn link small hidden">Hướng dẫn định dạng</button>
         </div>
-        <textarea id="bulk-input" rows="8" placeholder='Moi dong la mot object JSON hoac dict Python. Vi du: {"word":"gather","type":"v","meaning":"tu hop"}' disabled></textarea>
+        <div id="single-entry-form" class="single-entry-form">
+          <div class="single-entry-fields">
+            <label class="single-entry-field">
+              <span>Từ <span aria-hidden="true">*</span></span>
+              <input id="single-word-input" type="text" placeholder="Nhập từ" autocomplete="off" disabled>
+            </label>
+            <label class="single-entry-field">
+              <span>Loại từ <span aria-hidden="true">*</span></span>
+              <input id="single-type-input" type="text" placeholder="n, v, adj, ..." autocomplete="off" disabled>
+            </label>
+            <label class="single-entry-field">
+              <span>Nghĩa <span aria-hidden="true">*</span></span>
+              <input id="single-meaning-input" type="text" placeholder="Nghĩa tiếng Việt" autocomplete="off" disabled>
+            </label>
+            <label class="single-entry-field">
+              <span>Thẻ</span>
+              <input id="single-tags-input" type="text" placeholder="tag1, tag2, ..." autocomplete="off" disabled>
+            </label>
+          </div>
+        </div>
+        <textarea id="bulk-input" rows="8" placeholder='Moi dong la mot object JSON hoac dict Python. Vi du: {"word":"gather","type":"v","meaning":"tu hop"}' disabled class="hidden"></textarea>
         <button id="bulk-add-btn" class="btn secondary" disabled>Thêm</button>
         <pre id="bulk-feedback" class="bulk-feedback"></pre>
       </section>

@@ -97,6 +97,7 @@ const state = {
   practiceMode: 'meaning',
   audioVoice: DEFAULT_AUDIO_VOICE,
   typeCheckEnabled: true,
+  singleEntryMode: true,
   audioCache: new Map(),
   audioPrefetch: {
     active: false,
@@ -167,6 +168,12 @@ const refs = {
   bulkBtn: document.getElementById('bulk-add-btn'),
   bulkFeedback: document.getElementById('bulk-feedback'),
   bulkHelpBtn: document.getElementById('bulk-help-btn'),
+  singleInputToggle: document.getElementById('single-input-toggle'),
+  singleEntryForm: document.getElementById('single-entry-form'),
+  singleWordInput: document.getElementById('single-word-input'),
+  singleTypeInput: document.getElementById('single-type-input'),
+  singleMeaningInput: document.getElementById('single-meaning-input'),
+  singleTagsInput: document.getElementById('single-tags-input'),
   listTitle: document.getElementById('current-list-name'),
   signOutBtn: document.getElementById('sign-out-btn'),
   adminLink: document.getElementById('admin-link-btn'),
@@ -281,8 +288,13 @@ function bindEvents() {
   refs.nextPageBtn?.addEventListener('click', () => changePage(state.currentPageIndex + 1));
   refs.sortSelect?.addEventListener('change', handleSortChange);
   refs.pageSizeSelect?.addEventListener('change', handlePageSizeChange);
-  refs.bulkBtn?.addEventListener('click', handleBulkAdd);
+  refs.bulkBtn?.addEventListener('click', handleAddWord);
   refs.bulkHelpBtn?.addEventListener('click', showBulkHelp);
+  refs.singleInputToggle?.addEventListener('click', handleSingleInputToggle);
+  [
+    refs.singleWordInput, refs.singleTypeInput, refs.singleMeaningInput,
+    refs.singleTagsInput,
+  ].forEach((input) => input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddWord(); }));
   refs.signOutBtn?.addEventListener('click', handleSignOut);
   refs.startPracticeBtn?.addEventListener('click', handleStartPractice);
   refs.practiceModeSelect?.addEventListener('change', handlePracticeModeChange);
@@ -369,6 +381,8 @@ function bindEvents() {
   updatePracticeModeControl();
   updateTypeCheckToggle();
   updateVoiceToggle();
+  updateSingleInputToggle();
+  updateAddFormVisibility();
 }
 
 async function subscribeToLists() {
@@ -553,6 +567,9 @@ function resetListSelection() {
   refs.paginationInfo.textContent = '';
   refs.bulkTextarea.value = '';
   refs.bulkFeedback.textContent = '';
+  [
+    refs.singleWordInput, refs.singleTypeInput, refs.singleMeaningInput, refs.singleTagsInput,
+  ].forEach((input) => { if (input) input.value = ''; });
 }
 
 function toggleListControls(enabled) {
@@ -566,6 +583,10 @@ function toggleListControls(enabled) {
     refs.bulkTextarea,
     refs.bulkBtn,
     refs.pageSizeSelect,
+    refs.singleWordInput,
+    refs.singleTypeInput,
+    refs.singleMeaningInput,
+    refs.singleTagsInput,
   ].forEach((control) => {
     if (!control) return;
     control.disabled = !enabled;
@@ -626,6 +647,75 @@ function updateTypeCheckToggle() {
   const enabled = Boolean(state.typeCheckEnabled);
   button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
   button.setAttribute('aria-label', `Kiểm tra loại từ: ${enabled ? 'Bật' : 'Tắt'}`);
+}
+
+function updateSingleInputToggle() {
+  const button = refs.singleInputToggle;
+  if (!button) return;
+  const enabled = Boolean(state.singleEntryMode);
+  button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  button.setAttribute('aria-label', `Nhập từ đơn: ${enabled ? 'Bật' : 'Tắt'}`);
+}
+
+function handleSingleInputToggle() {
+  state.singleEntryMode = !state.singleEntryMode;
+  updateSingleInputToggle();
+  updateAddFormVisibility();
+}
+
+function updateAddFormVisibility() {
+  const single = state.singleEntryMode;
+  refs.singleEntryForm?.classList.toggle('hidden', !single);
+  refs.bulkTextarea?.classList.toggle('hidden', single);
+  refs.bulkHelpBtn?.classList.toggle('hidden', single);
+  if (refs.bulkFeedback) refs.bulkFeedback.textContent = '';
+}
+
+function handleAddWord() {
+  if (state.singleEntryMode) {
+    handleSingleAdd();
+  } else {
+    handleBulkAdd();
+  }
+}
+
+async function handleSingleAdd() {
+  if (!state.selectedListId) {
+    showToast('Hãy chọn một danh sách trước.', 'info');
+    return;
+  }
+  const word = refs.singleWordInput?.value.trim() ?? '';
+  const type = refs.singleTypeInput?.value.trim() ?? '';
+  const meaning = refs.singleMeaningInput?.value.trim() ?? '';
+  if (!word || !type || !meaning) {
+    showToast('Từ, loại từ và nghĩa là bắt buộc.', 'info');
+    return;
+  }
+  const tags = (refs.singleTagsInput?.value.trim() ?? '')
+    .split(',').map((t) => t.trim()).filter(Boolean);
+  const entry = {
+    word,
+    wordLower: word.toLowerCase(),
+    type,
+    meaning,
+    tags,
+    dueAt: null,
+  };
+  refs.bulkBtn.disabled = true;
+  refs.bulkBtn.textContent = 'Đang xử lý...';
+  try {
+    await upsertBulkVocabs(db, state.user.uid, state.selectedListId, [entry]);
+    [
+      refs.singleWordInput, refs.singleTypeInput, refs.singleMeaningInput, refs.singleTagsInput,
+    ].forEach((input) => { if (input) input.value = ''; });
+    refs.singleWordInput?.focus();
+    await refreshDataAfterMutation();
+  } catch (error) {
+    showToast(parseFirebaseError(error, 'Thêm từ thất bại'), 'error');
+  } finally {
+    refs.bulkBtn.disabled = false;
+    refs.bulkBtn.textContent = 'Thêm';
+  }
 }
 
 function handleAudioVoiceChange(voiceId) {

@@ -768,6 +768,28 @@ textarea {
   color: var(--muted);
 }
 
+.single-entry-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.single-entry-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.single-entry-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.single-entry-field input {
+  width: 100%;
+}
+
 .bulk-feedback {
   margin: 0;
   padding: 0.75rem 1rem;
