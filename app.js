@@ -2681,6 +2681,14 @@ async function handleBulkAdd() {
       showToast('Không có đồng hợp lệ nào được thêm.', 'info');
       return;
     }
+    refs.bulkBtn.textContent = 'Đang lấy phát âm...';
+    await Promise.all(
+      entries.map(async (entry) => {
+        if (!entry.pronunciation) {
+          entry.pronunciation = await getPronunciation(entry.word) || null;
+        }
+      })
+    );
     await upsertBulkVocabs(db, state.user.uid, state.selectedListId, entries);
     refs.bulkTextarea.value = '';
     await refreshDataAfterMutation();
