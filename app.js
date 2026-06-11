@@ -32,8 +32,9 @@ let pinyin = null;
 let phonemize = null;
 Promise.all([
   import("https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/+esm").then((m) => { pinyin = m.pinyin ?? m.default ?? null; }).catch(() => {}),
-  import("https://cdn.jsdelivr.net/npm/phonemize/+esm").then((m) => { phonemize = m.phonemize ?? m.default ?? null; }).catch(() => {}),
-]);const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
+  import("https://esm.sh/phonemize").then((m) => { phonemize = m.phonemize ?? m.default ?? null; }).catch(() => {}),
+]);
+const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
 const LISTENING_MODE_PREFETCH_RATIO = 0.5;
 const AUDIO_CACHE_LIMIT = 150;
 const AUDIO_VOICE_PROFILES = Object.freeze({
