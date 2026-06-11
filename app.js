@@ -29,11 +29,9 @@ import {
   confirmAction,
 } from './utils.js';
 let pinyin = null;
-let phonemize = null;
-Promise.all([
-  import("https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/+esm").then((m) => { pinyin = m.pinyin ?? m.default ?? null; }).catch(() => {}),
-  import("https://esm.sh/phonemize").then((m) => { phonemize = m.phonemize ?? m.default ?? null; }).catch(() => {}),
-]);
+import("https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/+esm")
+  .then((m) => { pinyin = m.pinyin ?? m.default ?? null; })
+  .catch(() => {});
 const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
 const LISTENING_MODE_PREFETCH_RATIO = 0.5;
 const AUDIO_CACHE_LIMIT = 150;
@@ -2795,14 +2793,26 @@ function openPrompt({ title, label, value = '', placeholder = '' }) {
 
 const hasChinese = (text) => /\p{Script=Han}/u.test(text);
 
-function getPronunciation(text) {
+async function getPronunciation(text) {
   try {
     if (hasChinese(text)) {
       if (!pinyin) return null;
-      return pinyin(text, { style: 'tone', segment: '@node-rs/jieba' }).flat().join(' ');
+      return pinyin(text, { toneType: 'symbol' });
     }
-    if (!phonemize) return null;
-    return phonemize(text);
+    const response = await fetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(text.trim().toLowerCase())}`
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!Array.isArray(data)) return null;
+    for (const entry of data) {
+      if (entry.phonetic) return entry.phonetic;
+      const phonetics = Array.isArray(entry.phonetics) ? entry.phonetics : [];
+      for (const p of phonetics) {
+        if (p.text) return p.text;
+      }
+    }
+    return null;
   } catch {
     return null;
   }
