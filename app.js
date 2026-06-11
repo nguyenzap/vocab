@@ -28,7 +28,8 @@ import {
   parseFirebaseError,
   confirmAction,
 } from './utils.js';
-
+import pinyin from "pinyin-pro";
+import { phonemize, toIPA, toARPABET } from 'phonemize'
 const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
 const LISTENING_MODE_PREFETCH_RATIO = 0.5;
 const AUDIO_CACHE_LIMIT = 150;
@@ -207,6 +208,7 @@ const refs = {
   voiceButtons: Array.from(
     document.querySelectorAll('#global-voice-toggle button[data-voice]')
   ),
+  quizPronunciation: document.getElementById('quiz-pronunciation'),
   quizAudioControls: document.getElementById('quiz-audio-controls'),
   quizAudioBtn: document.getElementById('quiz-audio-btn'),
   quizAudioStatus: document.getElementById('quiz-audio-status'),
@@ -693,12 +695,14 @@ async function handleSingleAdd() {
   }
   const tags = (refs.singleTagsInput?.value.trim() ?? '')
     .split(',').map((t) => t.trim()).filter(Boolean);
+  const pronunciation = await Promise.resolve(getPronunciation(word));
   const entry = {
     word,
     wordLower: word.toLowerCase(),
     type,
     meaning,
     tags,
+    pronunciation: pronunciation || null,
     dueAt: null,
   };
   refs.bulkBtn.disabled = true;
@@ -909,7 +913,7 @@ function renderTableRows(items) {
   refs.tableBody.innerHTML = '';
   if (!items.length) {
     const empty = document.createElement('tr');
-    empty.innerHTML = `<td colspan="5" class="empty-state">Chưa có dữ liệu. Thêm từ mới để bắt đầu!</td>`;
+    empty.innerHTML = `<td colspan="6" class="empty-state">Chưa có dữ liệu. Thêm từ mới để bắt đầu!</td>`;
     refs.tableBody.append(empty);
     return;
   }
@@ -922,6 +926,7 @@ function renderTableRows(items) {
     const meaningContent = item.meaning + (item.example ? `<br><small>${item.example}</small>` : '');
     tr.innerHTML = `
       <td title="${item.phonetic ?? ''}">${item.word}</td>
+      <td>${item.pronunciation ?? '--'}</td>
       <td>${item.type}</td>
       <td>${meaningContent}</td>
       <td>${tagsHtml}</td>
@@ -1516,6 +1521,7 @@ function prepareNextQuizQuestion() {
     }
     if (refs.quizLetterHint) refs.quizLetterHint.textContent = '';
     if (refs.quizTypeHint) refs.quizTypeHint.textContent = '';
+    if (refs.quizPronunciation) refs.quizPronunciation.textContent = '';
     updateQuizAudioStatus('Đang tải bộ từ tiếp theo...');
     updateQuizAudioControls();
     updateQuizProgress();
@@ -1549,6 +1555,7 @@ function prepareNextQuizQuestion() {
   refs.quizTypeHint.textContent = '';
   refs.quizFeedback.textContent = '';
   refs.quizFeedback.style.color = 'var(--muted)';
+  if (refs.quizPronunciation) refs.quizPronunciation.textContent = state.quiz.current?.pronunciation ?? '';
   refs.quizWordInput.value = '';
   refs.quizTypeInput.value = '';
   refs.quizWordInput.classList.remove('error');
@@ -2780,6 +2787,17 @@ function openPrompt({ title, label, value = '', placeholder = '' }) {
     };
     refs.modal.addEventListener('close', handleClose, { once: true });
   });
+}
+
+const hasChinese = (text) => /\p{Script=Han}/u.test(text);
+
+function getPronunciation(text) {
+  if (hasChinese(text)) {
+    return pinyin(text, { style: "tone", segment: "@node-rs/jieba" })
+      .flat()
+      .join(" ");
+  }
+  return phonemize(text);
 }
 
 init();

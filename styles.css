@@ -937,6 +937,14 @@ textarea {
   color: var(--muted);
 }
 
+.quiz-pronunciation {
+  font-size: 1rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  min-height: 1.4em;
+  margin: 0;
+}
+
 .quiz-meaning {
   background: rgba(51, 65, 85, 0.3);
   border-radius: var(--radius);
