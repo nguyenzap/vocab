@@ -28,9 +28,8 @@ import {
   parseFirebaseError,
   confirmAction,
 } from './utils.js';
-import pinyin from "pinyin-pro";
-import { phonemize, toIPA, toARPABET } from 'phonemize'
-const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
+import { pinyin } from "https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/+esm";
+import { phonemize, toIPA, toARPABET } from "https://cdn.jsdelivr.net/npm/phonemize/+esm";const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
 const LISTENING_MODE_PREFETCH_RATIO = 0.5;
 const AUDIO_CACHE_LIMIT = 150;
 const AUDIO_VOICE_PROFILES = Object.freeze({
