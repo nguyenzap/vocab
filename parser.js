@@ -159,6 +159,7 @@ export async function upsertBulkVocabs(db, userId, listId, entries) {
         example: entry.example || null,
         note: entry.note || null,
         phonetic: entry.phonetic || null,
+        pronunciation: entry.pronunciation || null,
         dueAt: entry.dueAt || null,
         updatedAt: serverTimestamp(),
       };
