@@ -28,8 +28,12 @@ import {
   parseFirebaseError,
   confirmAction,
 } from './utils.js';
-import { pinyin } from "https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/+esm";
-import { phonemize, toIPA, toARPABET } from "https://cdn.jsdelivr.net/npm/phonemize/+esm";const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
+let pinyin = null;
+let phonemize = null;
+Promise.all([
+  import("https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/+esm").then((m) => { pinyin = m.pinyin ?? m.default ?? null; }).catch(() => {}),
+  import("https://cdn.jsdelivr.net/npm/phonemize/+esm").then((m) => { phonemize = m.phonemize ?? m.default ?? null; }).catch(() => {}),
+]);const LISTENING_MODE_DEFAULT_CHUNK_SIZE = 25;
 const LISTENING_MODE_PREFETCH_RATIO = 0.5;
 const AUDIO_CACHE_LIMIT = 150;
 const AUDIO_VOICE_PROFILES = Object.freeze({
@@ -2791,12 +2795,16 @@ function openPrompt({ title, label, value = '', placeholder = '' }) {
 const hasChinese = (text) => /\p{Script=Han}/u.test(text);
 
 function getPronunciation(text) {
-  if (hasChinese(text)) {
-    return pinyin(text, { style: "tone", segment: "@node-rs/jieba" })
-      .flat()
-      .join(" ");
+  try {
+    if (hasChinese(text)) {
+      if (!pinyin) return null;
+      return pinyin(text, { style: 'tone', segment: '@node-rs/jieba' }).flat().join(' ');
+    }
+    if (!phonemize) return null;
+    return phonemize(text);
+  } catch {
+    return null;
   }
-  return phonemize(text);
 }
 
 init();
